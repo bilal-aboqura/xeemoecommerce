@@ -29,6 +29,21 @@ const ProductSchema = z.object({
   weight: z.string().nullable().optional(),
 });
 
+/** GET /api/admin/products — list all products (for admin use) */
+export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  const sb = getSupabaseServiceClient();
+  if (!sb) return NextResponse.json({ products: [] });
+
+  const { data } = await sb
+    .from("products")
+    .select("id, name_en, name_ar, price, images, stock, is_active")
+    .order("name_en", { ascending: true });
+
+  return NextResponse.json({ products: data ?? [] });
+}
+
 export async function POST(request: NextRequest) {
   const denied = await requireAdmin();
   if (denied) return denied;

@@ -13,11 +13,12 @@ import {
   Palette,
   Settings,
   BarChart3,
+  Layers,
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { cn } from "@/lib/utils";
 
-type NavKey = "dashboard" | "analytics" | "products" | "orders" | "customers" | "discounts" | "shipping" | "content" | "customize" | "settings";
+type NavKey = "dashboard" | "analytics" | "products" | "orders" | "customers" | "discounts" | "shipping" | "bundles" | "content" | "customize" | "settings";
 
 interface NavItem {
   href: string;
@@ -51,6 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/discounts", key: "discounts", Icon: Tag },
       { href: "/admin/shipping", key: "shipping", Icon: Truck },
+      { href: "/admin/bundles", key: "bundles", Icon: Layers },
       { href: "/admin/content", key: "content", Icon: FileText },
       { href: "/admin/customize", key: "customize", Icon: Palette },
       { href: "/admin/settings", key: "settings", Icon: Settings },
@@ -61,6 +63,7 @@ const NAV_GROUPS: NavGroup[] = [
 function getNavLabel(key: NavKey, t: Record<string, string>, ar: boolean): string {
   if (key === "analytics") return ar ? "التحليلات" : "Analytics";
   if (key === "customize") return ar ? "التخصيص" : "Customize";
+  if (key === "bundles") return ar ? "الباكدجات" : "Bundles";
   return t[key];
 }
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Loader2, Upload } from "lucide-react";
 import { useToast } from "@/components/admin/toast";
 import type { CategoryInfo } from "@/lib/data/catalog";
 
@@ -189,13 +190,30 @@ export function ProductForm({
       </div>
 
       <Field label={t("images", lang)}>
-        <textarea rows={3} value={form.images} onChange={(e) => set("images", e.target.value)} className={inputCls} placeholder="/images/gold_1l.webp" />
+        <textarea rows={3} value={form.images} onChange={(e) => set("images", e.target.value)} className={inputCls} placeholder="/images/gold_1l.webp&#10;One URL per line, or use upload below" />
       </Field>
+      <ProductImageUpload
+        lang={lang}
+        onUpload={(url) => {
+          const current = form.images.trim();
+          set("images", current ? `${current}\n${url}` : url);
+        }}
+      />
       {imageUrls.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {imageUrls.map((url, i) => (
             <div key={`${url}-${i}`} className="relative h-[60px] w-[60px] overflow-hidden rounded-lg border border-white/10">
               <Image src={url} alt="" fill sizes="60px" className="object-cover" />
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = imageUrls.filter((_, idx) => idx !== i).join("\n");
+                  set("images", updated);
+                }}
+                className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-bl bg-black/60 text-[8px] text-white/80 hover:bg-black/80"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>
@@ -237,5 +255,49 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-xs uppercase tracking-widest text-fg-muted">{label}</span>
       {children}
     </label>
+  );
+}
+
+function ProductImageUpload({ lang, onUpload }: { lang: "en" | "ar"; onUpload: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      if (data.url) onUpload(data.url);
+    } catch {
+      // silent — user can paste URL manually
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <>
+      <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-medium text-fg-muted transition hover:border-brand/40 hover:text-fg disabled:opacity-50"
+      >
+        {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+        {uploading
+          ? (lang === "ar" ? "جارٍ الرفع..." : "Uploading...")
+          : (lang === "ar" ? "ارفع صورة جديدة" : "Upload new image")}
+      </button>
+    </>
   );
 }

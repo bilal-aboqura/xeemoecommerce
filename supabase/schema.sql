@@ -6,6 +6,30 @@
 
 create extension if not exists "pgcrypto";
 
+-- ---------------------------------------------------------------- storage bucket
+-- Create a public storage bucket for product/bundle images if it doesn't exist.
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do nothing;
+
+-- Allow public read access to product-images bucket
+drop policy if exists "product_images_public_read" on storage.objects;
+create policy "product_images_public_read" on storage.objects
+  for select using (bucket_id = 'product-images');
+
+-- Allow authenticated users to upload to product-images
+drop policy if exists "product_images_auth_upload" on storage.objects;
+create policy "product_images_auth_upload" on storage.objects
+  for insert to authenticated with check (bucket_id = 'product-images');
+
+drop policy if exists "product_images_auth_update" on storage.objects;
+create policy "product_images_auth_update" on storage.objects
+  for update to authenticated using (bucket_id = 'product-images');
+
+drop policy if exists "product_images_auth_delete" on storage.objects;
+create policy "product_images_auth_delete" on storage.objects
+  for delete to authenticated using (bucket_id = 'product-images');
+
 -- ---------------------------------------------------------------- categories
 create table if not exists public.categories (
   id          uuid primary key default gen_random_uuid(),

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Loader2 } from "lucide-react";
+import { ImageUpload } from "@/components/admin/image-upload";
 import { useToast } from "@/components/admin/toast";
 import type { AdminSetting } from "@/lib/data/admin-crud";
+import type { CategoryInfo } from "@/lib/data/catalog";
 
 const KEY_DESCRIPTIONS: Record<string, { en: string; ar: string }> = {
   stat_customers: { en: "Total customers count", ar: "عدد العملاء الإجمالي" },
@@ -83,13 +85,17 @@ function ValueField({
 
 export function SettingsEditor({
   settings,
+  categories,
   lang,
 }: {
   settings: AdminSetting[];
+  categories: CategoryInfo[];
   lang: "en" | "ar";
 }) {
   const [items, setItems] = useState(settings);
+  const [categoryItems, setCategoryItems] = useState(categories);
   const [saving, setSaving] = useState<string | null>(null);
+  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValueEn, setNewValueEn] = useState("");
@@ -121,6 +127,34 @@ export function SettingsEditor({
     setItems((prev) =>
       prev.map((i) => (i.key === key ? { ...i, [field]: value } : i)),
     );
+  }
+
+  function updateCategory(id: string, image: string) {
+    setCategoryItems((prev) =>
+      prev.map((category) =>
+        category.id === id ? { ...category, image: image || null } : category,
+      ),
+    );
+  }
+
+  async function saveCategory(id: string) {
+    const item = categoryItems.find((category) => category.id === id);
+    if (!item) return;
+
+    setSavingCategoryId(id);
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, image: item.image }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success(lang === "ar" ? "تم حفظ الصورة" : "Image saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSavingCategoryId(null);
+    }
   }
 
   async function createSetting() {
@@ -159,6 +193,61 @@ export function SettingsEditor({
 
   return (
     <div className="mt-6 space-y-4">
+      {categoryItems.length > 0 && (
+        <div className="glass p-4">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-fg">
+              {lang === "ar" ? "صور خلفيات الأقسام" : "Category background images"}
+            </h2>
+            <p className="mt-1 text-xs text-fg-dim">
+              {lang === "ar"
+                ? "هذه الصور تظهر كخلفية كبيرة في صفحات الأقسام مثل Moto Care."
+                : "These images appear as the large backgrounds on category pages like Moto Care."}
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {categoryItems.map((category) => (
+              <div
+                key={category.id}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium text-fg">
+                      {lang === "ar" ? category.name_ar : category.name_en}
+                    </div>
+                    <code className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-fg-muted">
+                      {category.slug}
+                    </code>
+                  </div>
+                  <button
+                    onClick={() => saveCategory(category.id)}
+                    disabled={savingCategoryId === category.id}
+                    className="flex items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                  >
+                    {savingCategoryId === category.id ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Check size={12} />
+                    )}
+                    {savingCategoryId === category.id ? t.saving : t.save}
+                  </button>
+                </div>
+
+                <ImageUpload
+                  value={category.image ?? ""}
+                  onChange={(url) => updateCategory(category.id, url)}
+                  label={lang === "ar" ? "صورة الخلفية" : "Background image"}
+                  lang={lang}
+                  aspectRatio={16 / 9}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {items.map((s) => {
         const desc = KEY_DESCRIPTIONS[s.key];
         return (

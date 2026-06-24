@@ -1,11 +1,15 @@
 import { adminListSettings } from "@/lib/data/admin-crud";
+import { getAllCategories } from "@/lib/data/catalog";
 import { getLang } from "@/lib/i18n/server";
 import { SettingsEditor } from "@/components/admin/settings-editor";
 
 export default async function AdminContentPage() {
   const lang = await getLang();
   const ar = lang === "ar";
-  const settings = await adminListSettings();
+  const [settings, categories] = await Promise.all([
+    adminListSettings(),
+    getAllCategories(),
+  ]);
 
   return (
     <div>
@@ -17,7 +21,7 @@ export default async function AdminContentPage() {
           ? "حرر النصوص والمعلومات التي تظهر في الموقع."
           : "Edit the text and info shown across the storefront."}
       </p>
-      <SettingsEditor settings={settings} lang={lang} />
+      <SettingsEditor settings={settings} categories={categories} lang={lang} />
     </div>
   );
 }

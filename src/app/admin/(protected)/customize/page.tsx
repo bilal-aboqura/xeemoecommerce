@@ -13,17 +13,21 @@ interface SettingValue {
 type Fields = Record<string, SettingValue>;
 
 const DEFAULTS: Fields = {
-  store_name: { value_en: "", value_ar: "" },
-  store_tagline: { value_en: "", value_ar: "" },
-  store_phone: { value_en: "", value_ar: "" },
+  store_name: { value_en: "Xeemo", value_ar: "اكسيمو" },
+  store_tagline: { value_en: "Car Care Chemicals", value_ar: "كيماويات العناية بالسيارات" },
+  store_phone: { value_en: "+201150301033", value_ar: "+201150301033" },
   store_email: { value_en: "", value_ar: "" },
-  store_facebook: { value_en: "", value_ar: "" },
-  hero_title: { value_en: "", value_ar: "" },
-  hero_subtitle: { value_en: "", value_ar: "" },
-  free_shipping_threshold: { value_en: "", value_ar: "" },
-  stat_customers: { value_en: "", value_ar: "" },
-  stat_carwashes: { value_en: "", value_ar: "" },
-  stat_rating: { value_en: "", value_ar: "" },
+  store_facebook: { value_en: "https://www.facebook.com/officialxeemo", value_ar: "https://www.facebook.com/officialxeemo" },
+  hero_title: { value_en: "Your car will look showroom-fresh", value_ar: "عربيتك هتبان كأنها لسه نازلة من المعرض" },
+  hero_subtitle: { value_en: "The detailing products that car wash pros use — now in your hands.", value_ar: "منتجات التلميع والعناية اللي بيستخدمها أصحاب المغاسل — دلوقتي في إيدك." },
+  hero_cta: { value_en: "See the Best Sellers", value_ar: "شوف الأكثر مبيعاً" },
+  hero_pill_cod: { value_en: "Cash on Delivery", value_ar: "الدفع عند الاستلام" },
+  hero_pill_returns: { value_en: "7-day returns", value_ar: "استرجاع 7 أيام" },
+  hero_pill_shipping: { value_en: "Free shipping 600+ EGP", value_ar: "شحن مجاني فوق 600 ج.م" },
+  free_shipping_threshold: { value_en: "600", value_ar: "600" },
+  stat_customers: { value_en: "+500", value_ar: "+500" },
+  stat_carwashes: { value_en: "+50", value_ar: "+50" },
+  stat_rating: { value_en: "4.8/5", value_ar: "4.8/5" },
 };
 
 interface SectionDef {
@@ -57,6 +61,10 @@ const SECTIONS: SectionDef[] = [
     keys: [
       { key: "hero_title", label: { en: "Hero Title", ar: "العنوان الرئيسي" }, bilingual: true },
       { key: "hero_subtitle", label: { en: "Hero Subtitle", ar: "العنوان الفرعي" }, bilingual: true },
+      { key: "hero_cta", label: { en: "CTA Button Text", ar: "نص زر الإجراء" }, bilingual: true },
+      { key: "hero_pill_cod", label: { en: "COD Badge Text", ar: "نص شارة الدفع عند الاستلام" }, bilingual: true },
+      { key: "hero_pill_returns", label: { en: "Returns Badge Text", ar: "نص شارة الاسترجاع" }, bilingual: true },
+      { key: "hero_pill_shipping", label: { en: "Shipping Badge Text", ar: "نص شارة الشحن" }, bilingual: true },
     ],
   },
   {

@@ -142,96 +142,166 @@ export async function getRelatedProducts(
   return (data as ProductCard[]) ?? [];
 }
 
-/* ─── Bundle helpers ─────────────────────────────────────────────────────── */
+/* ─── Bundle helpers (config stored in settings table as JSON) ─────────────── */
 
 export interface BundleConfig {
   key: string;
-  categorySlug: string;
-  /** Pick the N cheapest products from the category (sorted by price asc). */
-  pickCount: number;
-  bundlePrice: number;
+  title_en: string;
+  title_ar: string;
+  desc_en: string;
+  desc_ar: string;
+  product_ids: string[];
+  bundle_price: number;
+  image: string;
+  active: boolean;
+  sort_order: number;
 }
-
-export const BUNDLE_CONFIGS: BundleConfig[] = [
-  { key: "fullCare", categorySlug: "carcare", pickCount: 4, bundlePrice: 470 },
-  { key: "proPack", categorySlug: "carcare", pickCount: 3, bundlePrice: 950 },
-  { key: "motoPack", categorySlug: "motocare", pickCount: 4, bundlePrice: 450 },
-];
 
 export interface ResolvedBundle {
   key: string;
+  title_en: string;
+  title_ar: string;
+  desc_en: string;
+  desc_ar: string;
+  image: string;
   products: ProductCard[];
   bundlePrice: number;
   originalPrice: number;
 }
 
-/**
- * Resolve bundles by fetching real products from the database.
- * - fullCare: 4 cheapest car-care products (the 1L items)
- * - proPack: 3 cheapest car-care products priced > 300 (the 4kg items)
- * - motoPack: all moto-care products
- */
+const DEFAULT_BUNDLES: BundleConfig[] = [
+  {
+    key: "fullCare",
+    title_en: "Full Care Package",
+    title_ar: "باكدج العناية الكاملة",
+    desc_en: "Dashboard Shiner + Snow Foam + Tire Shiner + Interior Cleaner (all 1L)",
+    desc_ar: "داشبورد شاينر + سنو فوم + تاير شاينر + منظف داخلي (كلهم 1 لتر)",
+    product_ids: [],
+    bundle_price: 470,
+    image: "/images/gold_1l.webp",
+    active: true,
+    sort_order: 0,
+  },
+  {
+    key: "proPack",
+    title_en: "Car Wash Pro Pack",
+    title_ar: "باكدج المغسلة",
+    desc_en: "Dashboard Shiner + Snow Foam + Tire Shiner (all 4kg)",
+    desc_ar: "داشبورد شاينر + سنو فوم + تاير شاينر (كلهم 4 كجم)",
+    product_ids: [],
+    bundle_price: 950,
+    image: "/images/foam4k.webp",
+    active: true,
+    sort_order: 1,
+  },
+  {
+    key: "motoPack",
+    title_en: "Moto Complete Pack",
+    title_ar: "باكدج الموتوسيكل الكامل",
+    desc_en: "Dashboard Shiner + Engine Shiner + Foam + Tire Shiner for motorcycles",
+    desc_ar: "داشبورد شاينر + إنجين شاينر + فوم + تاير شاينر للموتوسيكلات",
+    product_ids: [],
+    bundle_price: 450,
+    image: "/images/tire-1l.webp",
+    active: true,
+    sort_order: 2,
+  },
+];
+
+export async function getBundleConfigs(): Promise<BundleConfig[]> {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return DEFAULT_BUNDLES;
+
+  const { data } = await supabase
+    .from("settings")
+    .select("value_en")
+    .eq("key", "bundles")
+    .maybeSingle();
+
+  if (!data?.value_en) return DEFAULT_BUNDLES;
+
+  try {
+    const parsed = JSON.parse(data.value_en) as BundleConfig[];
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  } catch {
+    // Invalid JSON — fall through to defaults
+  }
+  return DEFAULT_BUNDLES;
+}
+
 export async function resolveBundles(): Promise<ResolvedBundle[]> {
   const supabase = await getSupabaseServerClient();
   if (!supabase) return [];
 
+  const configs = await getBundleConfigs();
   const results: ResolvedBundle[] = [];
 
-  // Full Care — 4 cheapest car care (1L items, roughly 120–145 EGP)
-  const carCat = await getCategoryBySlug("carcare");
-  if (carCat) {
-    const { data: carProducts } = await supabase
-      .from("products")
-      .select("id, slug, name_en, name_ar, price, compare_at_price, images, is_featured, stock")
-      .eq("is_active", true)
-      .eq("category_id", carCat.id)
-      .order("price", { ascending: true });
+  for (const config of configs) {
+    if (!config.active) continue;
 
-    const all = (carProducts ?? []) as ProductCard[];
+    let products: ProductCard[] = [];
 
-    // Full Care: 4 cheapest (1L products)
-    if (all.length >= 4) {
-      const picked = all.slice(0, 4);
-      results.push({
-        key: "fullCare",
-        products: picked,
-        bundlePrice: 470,
-        originalPrice: picked.reduce((s, p) => s + Number(p.price), 0),
-      });
+    if (config.product_ids.length > 0) {
+      const { data } = await supabase
+        .from("products")
+        .select("id, slug, name_en, name_ar, price, compare_at_price, images, is_featured, stock")
+        .in("id", config.product_ids);
+      products = (data ?? []) as ProductCard[];
+    } else {
+      // Auto-select fallback based on key
+      if (config.key === "fullCare") {
+        const cat = await getCategoryBySlug("carcare");
+        if (cat) {
+          const { data } = await supabase
+            .from("products")
+            .select("id, slug, name_en, name_ar, price, compare_at_price, images, is_featured, stock")
+            .eq("is_active", true)
+            .eq("category_id", cat.id)
+            .order("price", { ascending: true })
+            .limit(4);
+          products = (data ?? []) as ProductCard[];
+        }
+      } else if (config.key === "proPack") {
+        const cat = await getCategoryBySlug("carcare");
+        if (cat) {
+          const { data } = await supabase
+            .from("products")
+            .select("id, slug, name_en, name_ar, price, compare_at_price, images, is_featured, stock")
+            .eq("is_active", true)
+            .eq("category_id", cat.id)
+            .gt("price", 300)
+            .order("price", { ascending: true })
+            .limit(3);
+          products = (data ?? []) as ProductCard[];
+        }
+      } else if (config.key === "motoPack") {
+        const cat = await getCategoryBySlug("motocare");
+        if (cat) {
+          const { data } = await supabase
+            .from("products")
+            .select("id, slug, name_en, name_ar, price, compare_at_price, images, is_featured, stock")
+            .eq("is_active", true)
+            .eq("category_id", cat.id)
+            .order("price", { ascending: true });
+          products = (data ?? []) as ProductCard[];
+        }
+      }
     }
 
-    // Pro Pack: 3 cheapest of those priced > 300 (4kg products)
-    const fourKg = all.filter((p) => Number(p.price) > 300);
-    if (fourKg.length >= 3) {
-      const picked = fourKg.slice(0, 3);
-      results.push({
-        key: "proPack",
-        products: picked,
-        bundlePrice: 950,
-        originalPrice: picked.reduce((s, p) => s + Number(p.price), 0),
-      });
-    }
-  }
+    if (products.length === 0) continue;
 
-  // Moto Pack — all moto care products
-  const motoCat = await getCategoryBySlug("motocare");
-  if (motoCat) {
-    const { data: motoProducts } = await supabase
-      .from("products")
-      .select("id, slug, name_en, name_ar, price, compare_at_price, images, is_featured, stock")
-      .eq("is_active", true)
-      .eq("category_id", motoCat.id)
-      .order("price", { ascending: true });
-
-    const all = (motoProducts ?? []) as ProductCard[];
-    if (all.length > 0) {
-      results.push({
-        key: "motoPack",
-        products: all,
-        bundlePrice: 450,
-        originalPrice: all.reduce((s, p) => s + Number(p.price), 0),
-      });
-    }
+    const originalPrice = products.reduce((s, p) => s + Number(p.price), 0);
+    results.push({
+      key: config.key,
+      title_en: config.title_en,
+      title_ar: config.title_ar,
+      desc_en: config.desc_en,
+      desc_ar: config.desc_ar,
+      image: config.image,
+      products,
+      bundlePrice: config.bundle_price,
+      originalPrice,
+    });
   }
 
   return results;
@@ -255,6 +325,57 @@ export async function getCheapestInCategory(
     .limit(1)
     .maybeSingle();
   return (data as ProductCard) ?? null;
+}
+
+/* ─── Hero overrides (editable from admin Customize page) ─────────────────── */
+
+export interface HeroOverrides {
+  title_en?: string;
+  title_ar?: string;
+  subtitle_en?: string;
+  subtitle_ar?: string;
+  cta_en?: string;
+  cta_ar?: string;
+  pill_cod_en?: string;
+  pill_cod_ar?: string;
+  pill_returns_en?: string;
+  pill_returns_ar?: string;
+  pill_shipping_en?: string;
+  pill_shipping_ar?: string;
+}
+
+export async function getHeroOverrides(): Promise<HeroOverrides> {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return {};
+
+  const keys = [
+    "hero_title", "hero_subtitle", "hero_cta",
+    "hero_pill_cod", "hero_pill_returns", "hero_pill_shipping",
+  ];
+  const { data } = await supabase
+    .from("settings")
+    .select("key, value_en, value_ar")
+    .in("key", keys);
+
+  if (!data || data.length === 0) return {};
+
+  const map = new Map(data.map((d) => [d.key, { en: d.value_en, ar: d.value_ar }]));
+  const g = (k: string) => map.get(k);
+
+  return {
+    title_en: g("hero_title")?.en || undefined,
+    title_ar: g("hero_title")?.ar || undefined,
+    subtitle_en: g("hero_subtitle")?.en || undefined,
+    subtitle_ar: g("hero_subtitle")?.ar || undefined,
+    cta_en: g("hero_cta")?.en || undefined,
+    cta_ar: g("hero_cta")?.ar || undefined,
+    pill_cod_en: g("hero_pill_cod")?.en || undefined,
+    pill_cod_ar: g("hero_pill_cod")?.ar || undefined,
+    pill_returns_en: g("hero_pill_returns")?.en || undefined,
+    pill_returns_ar: g("hero_pill_returns")?.ar || undefined,
+    pill_shipping_en: g("hero_pill_shipping")?.en || undefined,
+    pill_shipping_ar: g("hero_pill_shipping")?.ar || undefined,
+  };
 }
 
 /* ─── Social proof stats ─────────────────────────────────────────────────── */

@@ -1,5 +1,6 @@
 import {
   HomeHero,
+  CategoryGrid,
   ProblemSection,
   TrustGuaranteeSection,
   Testimonials,
@@ -9,7 +10,7 @@ import {
   FinalCTASection,
 } from "@/components/storefront/home-hero";
 import { ProductCard } from "@/components/storefront/product-card";
-import { getFeaturedProducts, resolveBundles, getSocialStats } from "@/lib/data/catalog";
+import { getFeaturedProducts, resolveBundles, getSocialStats, getHeroOverrides } from "@/lib/data/catalog";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getLang } from "@/lib/i18n/server";
 import { ArrowRight } from "lucide-react";
@@ -17,10 +18,11 @@ import Link from "next/link";
 
 export default async function Home() {
   const supabase = await getSupabaseServerClient();
-  const [products, bundles, stats] = await Promise.all([
+  const [products, bundles, stats, heroOverrides] = await Promise.all([
     getFeaturedProducts(4),
     resolveBundles(),
     getSocialStats(),
+    getHeroOverrides(),
   ]);
   const connected = Boolean(supabase);
   const lang = await getLang();
@@ -28,10 +30,13 @@ export default async function Home() {
 
   return (
     <>
-      {/* 1. Hero — single static hero with one CTA */}
-      <HomeHero />
+      {/* 1. Hero — texts editable from admin/customize */}
+      <HomeHero overrides={heroOverrides} />
 
-      {/* 2. Problem / Agitation */}
+      {/* 2. Categories */}
+      <CategoryGrid />
+
+      {/* 3. Problem / Agitation */}
       <ProblemSection />
 
       {/* 3. Best Sellers (limited to top 4) */}

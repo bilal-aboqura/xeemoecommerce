@@ -31,7 +31,7 @@ import {
 import { useLang } from "@/components/language/provider";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
-import type { ResolvedBundle, SocialStats } from "@/lib/data/catalog";
+import type { ResolvedBundle, SocialStats, HeroOverrides } from "@/lib/data/catalog";
 
 /* ─── Constants ───────────────────────────────────────────────────────────── */
 
@@ -96,10 +96,11 @@ const FAQ_ITEMS = [
 
 /* ─── Hero ────────────────────────────────────────────────────────────────── */
 
-export function HomeHero() {
+export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
   const { t, lang } = useLang();
   const ar = lang === "ar";
   const [activeIndex, setActiveIndex] = useState(0);
+  const o = overrides ?? {};
 
   const HERO_IMAGES = [
     { src: "/images/gold_1l.webp", alt: "Dashboard Shiner Gold" },
@@ -142,16 +143,16 @@ export function HomeHero() {
         <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 py-20 sm:py-28 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-36">
           <div className="animate-fade-in-up">
             <h1 className="font-heading text-4xl font-bold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-6xl">
-              {t.home.heroTitle}
+              {(ar ? o.title_ar : o.title_en) || t.home.heroTitle}
             </h1>
 
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-fg-muted">
-              {t.home.heroSubtitle}
+              {(ar ? o.subtitle_ar : o.subtitle_en) || t.home.heroSubtitle}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="#bestsellers" className="btn btn-primary gap-2">
-                {t.home.shopNow}
+                {(ar ? o.cta_ar : o.cta_en) || t.home.shopNow}
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -160,15 +161,15 @@ export function HomeHero() {
             <div className="mt-6 flex flex-wrap gap-2">
               <span className="pill pill-success gap-1.5">
                 <Banknote size={11} />
-                {t.product.cod}
+                {(ar ? o.pill_cod_ar : o.pill_cod_en) || t.product.cod}
               </span>
               <span className="pill pill-info gap-1.5">
                 <RotateCcw size={11} />
-                {ar ? "استرجاع 7 أيام" : "7-day returns"}
+                {(ar ? o.pill_returns_ar : o.pill_returns_en) || (ar ? "استرجاع 7 أيام" : "7-day returns")}
               </span>
               <span className="pill pill-neutral gap-1.5">
                 <Truck size={11} />
-                {ar ? "شحن مجاني فوق 600 ج.م" : "Free shipping 600+ EGP"}
+                {(ar ? o.pill_shipping_ar : o.pill_shipping_en) || (ar ? "شحن مجاني فوق 600 ج.م" : "Free shipping 600+ EGP")}
               </span>
             </div>
           </div>
@@ -237,18 +238,18 @@ export function HomeHero() {
         </div>
       </section>
 
-      {/* Marquee */}
-      <div className="relative overflow-hidden border-y border-border bg-white/[0.015] py-6">
+      {/* Marquee — pill-card style with edge fade */}
+      <div className="relative overflow-hidden border-y border-border bg-ink py-6">
         <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-24 bg-gradient-to-r from-ink to-transparent sm:w-40" />
         <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-24 bg-gradient-to-l from-ink to-transparent sm:w-40" />
         
         <div className="marquee-track">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((copy) => (
-            <div key={copy} className="flex shrink-0 gap-6 px-3">
+            <div key={copy} className="flex shrink-0 gap-4 px-2">
               {MARQUEE_ITEMS.map((m, i) => (
                 <div
                   key={`${copy}-${i}`}
-                  className="glass flex shrink-0 cursor-default items-center gap-2.5 whitespace-nowrap rounded-full px-8 py-3.5 text-[15px] font-bold text-fg transition-all hover:border-brand/30 hover:shadow-lg hover:shadow-brand/10"
+                  className="flex shrink-0 cursor-default items-center gap-2.5 whitespace-nowrap rounded-full border-2 border-brand/20 bg-white px-8 py-3.5 text-[15px] font-bold text-black shadow-lg shadow-black/5 transition-all duration-300 hover:border-brand/40 hover:shadow-xl hover:shadow-brand/10"
                 >
                   <m.Icon size={18} className="text-brand" />
                   {m[lang]}
@@ -378,12 +379,6 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
   const ar = lang === "ar";
   const [addedKey, setAddedKey] = useState<string | null>(null);
 
-  const bundleDetails: Record<string, { title: string; desc: string }> = {
-    fullCare: { title: t.home.bundleFullCare, desc: t.home.bundleFullCareDesc },
-    proPack: { title: t.home.bundleProPack, desc: t.home.bundleProPackDesc },
-    motoPack: { title: t.home.bundleMotoPack, desc: t.home.bundleMotoPackDesc },
-  };
-
   const fallbackBundles = BUNDLES;
   const resolved = bundles && bundles.length > 0;
 
@@ -418,30 +413,31 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
       <div className="mt-10 grid gap-5 sm:grid-cols-3">
         {resolved
           ? bundles.map((b) => {
-              const info = bundleDetails[b.key] ?? { title: b.key, desc: "" };
+              const title = ar ? b.title_ar : b.title_en;
+              const desc = ar ? b.desc_ar : b.desc_en;
               const saving = b.originalPrice - b.bundlePrice;
-              const image = b.products[0]?.images?.[0] ?? "/images/placeholder.webp";
+              const image = b.image || b.products[0]?.images?.[0] || "/images/placeholder.webp";
               const isAdded = addedKey === b.key;
               return (
                 <div key={b.key} className="glass group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-white">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-surface">
                     <Image
                       src={image}
-                      alt={info.title}
+                      alt={title}
                       fill
                       sizes="(max-width:768px) 100vw, 33vw"
-                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute left-2.5 top-2.5">
-                      <span className="pill pill-danger gap-1">
+                      <span className="pill pill-warning gap-1">
                         <Package size={10} />
                         {b.products.length} {ar ? "منتجات" : "items"}
                       </span>
                     </div>
                   </div>
                   <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-base font-semibold text-fg">{info.title}</h3>
-                    <p className="mt-1.5 text-xs leading-relaxed text-fg-dim">{info.desc}</p>
+                    <h3 className="text-base font-semibold text-fg">{title}</h3>
+                    <p className="mt-1.5 text-xs leading-relaxed text-fg-dim">{desc}</p>
                     <ul className="mt-2 space-y-0.5">
                       {b.products.map((p) => (
                         <li key={p.id} className="text-[11px] text-fg-dim">
@@ -473,20 +469,25 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
               );
             })
           : fallbackBundles.map((b) => {
+              const bundleDetails: Record<string, { title: string; desc: string }> = {
+                fullCare: { title: t.home.bundleFullCare, desc: t.home.bundleFullCareDesc },
+                proPack: { title: t.home.bundleProPack, desc: t.home.bundleProPackDesc },
+                motoPack: { title: t.home.bundleMotoPack, desc: t.home.bundleMotoPackDesc },
+              };
               const info = bundleDetails[b.key];
               const saving = b.originalPrice - b.bundlePrice;
               return (
                 <div key={b.key} className="glass group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-white">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-surface">
                     <Image
                       src={b.image}
                       alt={info.title}
                       fill
                       sizes="(max-width:768px) 100vw, 33vw"
-                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute left-2.5 top-2.5">
-                      <span className="pill pill-danger gap-1">
+                      <span className="pill pill-warning gap-1">
                         <Package size={10} />
                         {b.items} {ar ? "منتجات" : "items"}
                       </span>
