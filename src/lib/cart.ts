@@ -1,0 +1,111 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+
+export interface CartItem {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_ar: string;
+  price: number;
+  image: string;
+  quantity: number;
+  stock?: number;
+}
+
+const KEY = "cart";
+const EVENT = "cart:updated";
+
+// ── Store: keeps localStorage as the source of truth ────────────────────────
+function readAll(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function commit(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(KEY, JSON.stringify(items));
+  window.dispatchEvent(new CustomEvent(EVENT));
+}
+
+// ── useSyncExternalStore glue (stable references, keyed by the raw string) ──
+let lastRaw: string | null | undefined;
+let lastItems: CartItem[] = [];
+
+function getSnapshot(): CartItem[] {
+  const raw =
+    typeof window === "undefined" ? undefined : localStorage.getItem(KEY);
+  if (raw !== lastRaw) {
+    lastRaw = raw;
+    try {
+      lastItems = raw ? (JSON.parse(raw) as CartItem[]) : [];
+    } catch {
+      lastItems = [];
+    }
+  }
+  return lastItems;
+}
+
+const EMPTY: CartItem[] = [];
+function getServerSnapshot(): CartItem[] {
+  return EMPTY;
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener(EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+/** React hook returning the current cart items (reactive to changes). */
+export function useCart(): CartItem[] {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+export function useCartCount(): number {
+  return useCart().reduce((sum, i) => sum + i.quantity, 0);
+}
+
+// ── Mutations ───────────────────────────────────────────────────────────────
+export function addToCart(
+  item: Omit<CartItem, "quantity">,
+  quantity = 1,
+): void {
+  const items = readAll();
+  const existing = items.find((i) => i.id === item.id);
+  const cap = item.stock ?? 99;
+  if (existing) {
+    existing.quantity = Math.min((existing.quantity || 0) + quantity, cap);
+  } else {
+    items.push({ ...item, quantity: Math.min(quantity, cap) });
+  }
+  commit(items);
+}
+
+export function updateQuantity(id: string, quantity: number): void {
+  let items = readAll();
+  if (quantity <= 0) {
+    items = items.filter((i) => i.id !== id);
+  } else {
+    items = items.map((i) =>
+      i.id === id ? { ...i, quantity: Math.min(quantity, i.stock ?? 99) } : i,
+    );
+  }
+  commit(items);
+}
+
+export function removeFromCart(id: string): void {
+  commit(readAll().filter((i) => i.id !== id));
+}
+
+export function clearCart(): void {
+  commit([]);
+}

@@ -1,26 +1,291 @@
 @import "tailwindcss";
 
+/*
+  Xeemo — Premium Design System v2
+  Modern dark UI with refined glassmorphism, clean typography, and fluid motion.
+*/
+
+@theme {
+  /* ── Brand ─────────────────────────────────────────────── */
+  --color-brand: #dc2626;
+  --color-brand-dark: #991b1b;
+  --color-brand-soft: #fca5a5;
+  --color-brand-glow: rgba(220, 38, 38, 0.15);
+
+  /* ── Accent ────────────────────────────────────────────── */
+  --color-gold: #d97706;
+  --color-stargold: #f59e0b;
+  --color-emerald: #059669;
+
+  /* ── Surfaces ──────────────────────────────────────────── */
+  --color-ink: #09090b;
+  --color-ink-2: #18181b;
+  --color-surface: #1c1c21;
+  --color-surface-raised: #27272a;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hover: rgba(255, 255, 255, 0.12);
+
+  /* ── Text ──────────────────────────────────────────────── */
+  --color-fg: #fafafa;
+  --color-fg-muted: #d4d4d8;
+  --color-fg-dim: #71717a;
+
+  /* ── Fonts ─────────────────────────────────────────────── */
+  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-oswald), var(--font-cairo), sans-serif;
+  --font-display: var(--font-bebas), var(--font-oswald), sans-serif;
+  --font-body-alt: var(--font-roboto), var(--font-cairo), sans-serif;
+
+  /* ── Radii ─────────────────────────────────────────────── */
+  --radius-glass: 16px;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-ink);
+  --foreground: var(--color-fg);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
+  background: var(--color-ink);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  line-height: 1.6;
 }
+
+html[dir="rtl"] body {
+  font-family: var(--font-cairo), sans-serif;
+  font-weight: 500;
+}
+
+/* ── Arabic RTL typographic overrides ────────────────────── */
+html[dir="rtl"] .font-heading,
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3 {
+  font-family: var(--font-cairo), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+html[dir="rtl"] .font-bold,
+html[dir="rtl"] b,
+html[dir="rtl"] strong {
+  font-weight: 700;
+}
+html[dir="rtl"] .font-semibold {
+  font-weight: 700;
+}
+html[dir="rtl"] .font-medium {
+  font-weight: 600;
+}
+html[dir="rtl"] .btn {
+  font-family: var(--font-cairo), sans-serif;
+  font-weight: 700;
+}
+html[dir="rtl"] .pill {
+  font-family: var(--font-cairo), sans-serif;
+  font-weight: 600;
+}
+
+/* ── Selection ───────────────────────────────────────────── */
+::selection {
+  background: var(--color-brand);
+  color: white;
+}
+
+/* ── Glassmorphism v2 ────────────────────────────────────── */
+.glass {
+  background: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-glass);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.glass:hover {
+  border-color: var(--color-border-hover);
+}
+
+.glass-elevated {
+  background: rgba(28, 28, 33, 0.8);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-glass);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+/* ── Glow effects ────────────────────────────────────────── */
+.glow-brand {
+  box-shadow: 0 0 24px var(--color-brand-glow), 0 0 64px var(--color-brand-glow);
+}
+
+/* ── Input styling ───────────────────────────────────────── */
+.input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-brand-glow);
+}
+.input::placeholder {
+  color: var(--color-fg-dim);
+}
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Button base ─────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-brand);
+  color: white;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-brand-dark);
+  box-shadow: 0 0 20px var(--color-brand-glow);
+}
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-fg);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Infinite seamless marquee: two identical strips side by side, the first
+   translates its full width to the left, creating a perfect loop. */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+html[dir="rtl"] .marquee-track {
+  animation: marquee-rtl 35s linear infinite;
+}
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-surface-raised); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-fg-dim); }
+
+/* ── Status pills ────────────────────────────────────────── */
+.pill { display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 999px; padding: 0.125rem 0.625rem; font-size: 0.75rem; font-weight: 500; }
+.pill-success { background: rgba(5, 150, 105, 0.12); color: #6ee7b7; border: 1px solid rgba(5, 150, 105, 0.2); }
+.pill-warning { background: rgba(217, 119, 6, 0.12); color: #fcd34d; border: 1px solid rgba(217, 119, 6, 0.2); }
+.pill-danger { background: rgba(220, 38, 38, 0.12); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.2); }
+.pill-neutral { background: rgba(113, 113, 122, 0.12); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.2); }
+.pill-info { background: rgba(14, 165, 233, 0.12); color: #7dd3fc; border: 1px solid rgba(14, 165, 233, 0.2); }
+
+/* ── Free-shipping progress bar ──────────────────────────── */
+.shipping-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.shipping-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-emerald);
+  transition: width 0.5s ease;
+}
+.shipping-bar-fill-pending {
+  background: var(--color-brand);
+}
+
+/* ── Order bump card ─────────────────────────────────────── */
+.bump-card {
+  background: rgba(217, 119, 6, 0.06);
+  border: 1px dashed rgba(217, 119, 6, 0.3);
+  border-radius: var(--radius-glass);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.bump-card-active {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: var(--color-gold);
+}
+
+/* ── FAQ accordion ───────────────────────────────────────── */
+.faq-item summary {
+  cursor: pointer;
+  list-style: none;
+}
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+.faq-item[open] summary .faq-chevron {
+  transform: rotate(180deg);
+}
+.faq-chevron {
+  transition: transform 0.2s ease;
+}
+
+/* ── WhatsApp floating button ────────────────────────────── */
+@keyframes waFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.wa-float {
+  animation: waFloat 3s ease-in-out infinite;
+}
+
+/* ── Animate utility (shared) ────────────────────────────── */
+.animate-fade-in { animation: fadeIn 0.5s ease both; }
+.animate-fade-in-up { animation: fadeInUp 0.5s ease both; }
+.animate-slide-down { animation: slideDown 0.3s ease both; }
