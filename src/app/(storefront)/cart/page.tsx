@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag, Trash2, ArrowRight, Minus, Plus, Truck, CheckCircle } from "lucide-react";
@@ -12,11 +13,24 @@ const FREE_SHIPPING_THRESHOLD = 600;
 export default function CartPage() {
   const { t, lang } = useLang();
   const items = useCart();
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(FREE_SHIPPING_THRESHOLD);
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const ar = lang === "ar";
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
-  const progress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const freeShipping = subtotal >= freeShippingThreshold;
+  const remaining = Math.max(freeShippingThreshold - subtotal, 0);
+  const progress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
+
+  useEffect(() => {
+    fetch("/api/checkout-data")
+      .then((r) => r.json())
+      .then((data) => {
+        const threshold = Number(data.freeShippingThreshold);
+        if (Number.isFinite(threshold) && threshold > 0) {
+          setFreeShippingThreshold(threshold);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12">

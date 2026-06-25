@@ -20,7 +20,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
 
   return (
     <ToastProvider>
-      <div className="min-h-[calc(100dvh-72px)]">
+      <div className="admin-light min-h-[calc(100dvh-72px)] bg-ink text-fg">
         <header className="sticky top-0 z-40 flex h-[72px] items-center justify-between border-b border-border bg-ink/70 px-5 backdrop-blur-xl lg:px-8">
           <Link href="/admin" className="flex items-center gap-2">
             <Image 

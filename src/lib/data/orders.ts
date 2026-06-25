@@ -1,4 +1,5 @@
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
+import { getCheckoutSettings } from "@/lib/data/catalog";
 
 export interface CreateOrderInput {
   customer_name: string;
@@ -143,12 +144,17 @@ export async function createOrder(
     0,
   );
   const volumeDiscount = calcVolumeDiscount(input.items);
-  const shipping = await getShippingCost(input.governorate, input.city);
+  const [shipping, checkoutSettings] = await Promise.all([
+    getShippingCost(input.governorate, input.city),
+    getCheckoutSettings(),
+  ]);
+  const shippingCost =
+    itemsTotal >= checkoutSettings.freeShippingThreshold ? 0 : shipping.cost;
   const codeDiscount = await resolveDiscount(input.discount_code, itemsTotal);
   const totalDiscount = volumeDiscount + (codeDiscount?.amount ?? 0);
   const grandTotal = Math.max(
     0,
-    itemsTotal + shipping.cost - totalDiscount,
+    itemsTotal + shippingCost - totalDiscount,
   );
 
   // ensure a unique order number (retry on rare collision)
@@ -176,7 +182,7 @@ export async function createOrder(
       address: input.address,
       notes: input.notes ?? null,
       items_total: itemsTotal,
-      shipping_cost: shipping.cost,
+      shipping_cost: shippingCost,
       discount: totalDiscount,
       discount_code: codeDiscount?.code ?? null,
       grand_total: grandTotal,

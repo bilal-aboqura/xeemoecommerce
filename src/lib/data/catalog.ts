@@ -327,9 +327,110 @@ export async function getCheapestInCategory(
   return (data as ProductCard) ?? null;
 }
 
+/* ─── Checkout settings (editable from admin Customize page) ─────────────── */
+
+export interface CheckoutSettings {
+  freeShippingThreshold: number;
+  bumpProductSlugs: string[];
+  bumpPrice: number;
+  bumpDesc_en?: string;
+  bumpDesc_ar?: string;
+}
+
+const DEFAULT_CHECKOUT_SETTINGS: CheckoutSettings = {
+  freeShippingThreshold: 600,
+  bumpProductSlugs: [],
+  bumpPrice: 280,
+};
+
+function parsePositiveNumber(value: string | null | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseSlugList(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((slug) => String(slug).trim())
+        .filter(Boolean)
+        .slice(0, 3);
+    }
+  } catch {
+    // Comma-separated values are accepted for easy manual edits.
+  }
+  return value
+    .split(",")
+    .map((slug) => slug.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function parseImageList(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((src) => String(src).trim())
+        .filter(Boolean)
+        .slice(0, 12);
+    }
+  } catch {
+    // Comma/newline-separated values are accepted for easy manual edits.
+  }
+  return value
+    .split(/[\n,]/)
+    .map((src) => src.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+export async function getCheckoutSettings(): Promise<CheckoutSettings> {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return DEFAULT_CHECKOUT_SETTINGS;
+
+  const { data } = await supabase
+    .from("settings")
+    .select("key, value_en, value_ar")
+    .in("key", [
+      "free_shipping_threshold",
+      "order_bump_product_slugs",
+      "order_bump_product_slug",
+      "order_bump_price",
+      "order_bump_desc",
+    ]);
+
+  if (!data || data.length === 0) return DEFAULT_CHECKOUT_SETTINGS;
+
+  const map = new Map(data.map((d) => [d.key, { en: d.value_en, ar: d.value_ar }]));
+  const threshold = map.get("free_shipping_threshold")?.en;
+  const bumpPrice = map.get("order_bump_price")?.en;
+  const bumpSlugs = parseSlugList(
+    map.get("order_bump_product_slugs")?.en ||
+      map.get("order_bump_product_slug")?.en,
+  );
+  const bumpDesc = map.get("order_bump_desc");
+
+  return {
+    freeShippingThreshold: parsePositiveNumber(
+      threshold,
+      DEFAULT_CHECKOUT_SETTINGS.freeShippingThreshold,
+    ),
+    bumpProductSlugs: bumpSlugs,
+    bumpPrice: parsePositiveNumber(bumpPrice, DEFAULT_CHECKOUT_SETTINGS.bumpPrice),
+    bumpDesc_en: bumpDesc?.en || undefined,
+    bumpDesc_ar: bumpDesc?.ar || undefined,
+  };
+}
+
 /* ─── Hero overrides (editable from admin Customize page) ─────────────────── */
 
 export interface HeroOverrides {
+  background_image?: string;
+  product_images?: string[];
   title_en?: string;
   title_ar?: string;
   subtitle_en?: string;
@@ -342,6 +443,16 @@ export interface HeroOverrides {
   pill_returns_ar?: string;
   pill_shipping_en?: string;
   pill_shipping_ar?: string;
+  marquee_cod_en?: string;
+  marquee_cod_ar?: string;
+  marquee_returns_en?: string;
+  marquee_returns_ar?: string;
+  marquee_made_en?: string;
+  marquee_made_ar?: string;
+  marquee_shipping_en?: string;
+  marquee_shipping_ar?: string;
+  marquee_payments_en?: string;
+  marquee_payments_ar?: string;
 }
 
 export async function getHeroOverrides(): Promise<HeroOverrides> {
@@ -349,8 +460,11 @@ export async function getHeroOverrides(): Promise<HeroOverrides> {
   if (!supabase) return {};
 
   const keys = [
+    "hero_background_image", "hero_images",
     "hero_title", "hero_subtitle", "hero_cta",
     "hero_pill_cod", "hero_pill_returns", "hero_pill_shipping",
+    "hero_marquee_cod", "hero_marquee_returns", "hero_marquee_made",
+    "hero_marquee_shipping", "hero_marquee_payments",
   ];
   const { data } = await supabase
     .from("settings")
@@ -363,6 +477,8 @@ export async function getHeroOverrides(): Promise<HeroOverrides> {
   const g = (k: string) => map.get(k);
 
   return {
+    background_image: g("hero_background_image")?.en || undefined,
+    product_images: parseImageList(g("hero_images")?.en),
     title_en: g("hero_title")?.en || undefined,
     title_ar: g("hero_title")?.ar || undefined,
     subtitle_en: g("hero_subtitle")?.en || undefined,
@@ -375,6 +491,16 @@ export async function getHeroOverrides(): Promise<HeroOverrides> {
     pill_returns_ar: g("hero_pill_returns")?.ar || undefined,
     pill_shipping_en: g("hero_pill_shipping")?.en || undefined,
     pill_shipping_ar: g("hero_pill_shipping")?.ar || undefined,
+    marquee_cod_en: g("hero_marquee_cod")?.en || undefined,
+    marquee_cod_ar: g("hero_marquee_cod")?.ar || undefined,
+    marquee_returns_en: g("hero_marquee_returns")?.en || undefined,
+    marquee_returns_ar: g("hero_marquee_returns")?.ar || undefined,
+    marquee_made_en: g("hero_marquee_made")?.en || undefined,
+    marquee_made_ar: g("hero_marquee_made")?.ar || undefined,
+    marquee_shipping_en: g("hero_marquee_shipping")?.en || undefined,
+    marquee_shipping_ar: g("hero_marquee_shipping")?.ar || undefined,
+    marquee_payments_en: g("hero_marquee_payments")?.en || undefined,
+    marquee_payments_ar: g("hero_marquee_payments")?.ar || undefined,
   };
 }
 

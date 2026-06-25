@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Save } from "lucide-react";
+import { Check, Loader2, Save, Search, X } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { useToast } from "@/components/admin/toast";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 interface SettingValue {
   value_en: string;
@@ -11,6 +12,27 @@ interface SettingValue {
 }
 
 type Fields = Record<string, SettingValue>;
+
+interface ProductOption {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_ar: string;
+  price: number;
+  stock: number;
+  is_active: boolean;
+}
+
+const DEFAULT_HERO_IMAGES = [
+  "/images/gold_1l.webp",
+  "/images/foam4k.webp",
+  "/images/tireprime.webp",
+  "/images/enginecleaner-1l.webp",
+  "/images/universal-1l.webp",
+  "/images/rims-4k.webp",
+  "/images/candy-4k.webp",
+  "/images/black-ice-4k.webp",
+];
 
 const DEFAULTS: Fields = {
   store_name: { value_en: "Xeemo", value_ar: "اكسيمو" },
@@ -21,10 +43,21 @@ const DEFAULTS: Fields = {
   hero_title: { value_en: "Your car will look showroom-fresh", value_ar: "عربيتك هتبان كأنها لسه نازلة من المعرض" },
   hero_subtitle: { value_en: "The detailing products that car wash pros use — now in your hands.", value_ar: "منتجات التلميع والعناية اللي بيستخدمها أصحاب المغاسل — دلوقتي في إيدك." },
   hero_cta: { value_en: "See the Best Sellers", value_ar: "شوف الأكثر مبيعاً" },
+  hero_background_image: { value_en: "/images/hs.webp", value_ar: "" },
+  hero_images: { value_en: JSON.stringify(DEFAULT_HERO_IMAGES), value_ar: "" },
   hero_pill_cod: { value_en: "Cash on Delivery", value_ar: "الدفع عند الاستلام" },
   hero_pill_returns: { value_en: "7-day returns", value_ar: "استرجاع 7 أيام" },
   hero_pill_shipping: { value_en: "Free shipping 600+ EGP", value_ar: "شحن مجاني فوق 600 ج.م" },
+  hero_marquee_cod: { value_en: "Pay when it arrives - not before", value_ar: "ادفع لما المنتج يوصلك - مش قبلها" },
+  hero_marquee_returns: { value_en: "7-day hassle-free returns", value_ar: "استرجاع خلال 7 أيام" },
+  hero_marquee_made: { value_en: "100% Made in Egypt", value_ar: "صناعة مصرية 100%" },
+  hero_marquee_shipping: { value_en: "Free shipping over 600 EGP", value_ar: "شحن مجاني فوق 600 ج.م" },
+  hero_marquee_payments: { value_en: "Secure card payments", value_ar: "دفع آمن بالبطاقة" },
   free_shipping_threshold: { value_en: "600", value_ar: "600" },
+  order_bump_product_slugs: { value_en: "[]", value_ar: "" },
+  order_bump_product_slug: { value_en: "", value_ar: "" },
+  order_bump_price: { value_en: "280", value_ar: "280" },
+  order_bump_desc: { value_en: "Signature scent for your car - checkout-only price", value_ar: "ريحة مميزة لعربيتك - سعر خاص مع طلبك" },
   stat_customers: { value_en: "+500", value_ar: "+500" },
   stat_carwashes: { value_en: "+50", value_ar: "+50" },
   stat_rating: { value_en: "4.8/5", value_ar: "4.8/5" },
@@ -36,7 +69,7 @@ interface SectionDef {
     key: string;
     label: { en: string; ar: string };
     bilingual?: boolean;
-    type?: "number";
+    type?: "number" | "image" | "hero-images";
   }[];
 }
 
@@ -62,15 +95,25 @@ const SECTIONS: SectionDef[] = [
       { key: "hero_title", label: { en: "Hero Title", ar: "العنوان الرئيسي" }, bilingual: true },
       { key: "hero_subtitle", label: { en: "Hero Subtitle", ar: "العنوان الفرعي" }, bilingual: true },
       { key: "hero_cta", label: { en: "CTA Button Text", ar: "نص زر الإجراء" }, bilingual: true },
+      { key: "hero_background_image", label: { en: "Hero Background Image", ar: "صورة خلفية الهيرو" }, type: "image" },
+      { key: "hero_images", label: { en: "Hero Product Images", ar: "صور منتجات الهيرو" }, type: "hero-images" },
       { key: "hero_pill_cod", label: { en: "COD Badge Text", ar: "نص شارة الدفع عند الاستلام" }, bilingual: true },
       { key: "hero_pill_returns", label: { en: "Returns Badge Text", ar: "نص شارة الاسترجاع" }, bilingual: true },
       { key: "hero_pill_shipping", label: { en: "Shipping Badge Text", ar: "نص شارة الشحن" }, bilingual: true },
+      { key: "hero_marquee_cod", label: { en: "Marquee COD Text", ar: "نص شريط الدفع عند الاستلام" }, bilingual: true },
+      { key: "hero_marquee_returns", label: { en: "Marquee Returns Text", ar: "نص شريط الاسترجاع" }, bilingual: true },
+      { key: "hero_marquee_made", label: { en: "Marquee Made in Egypt Text", ar: "نص شريط صناعة مصرية" }, bilingual: true },
+      { key: "hero_marquee_shipping", label: { en: "Marquee Shipping Text", ar: "نص شريط الشحن" }, bilingual: true },
+      { key: "hero_marquee_payments", label: { en: "Marquee Payments Text", ar: "نص شريط الدفع الإلكتروني" }, bilingual: true },
     ],
   },
   {
     title: { en: "Offers & Social Proof", ar: "العروض والإثبات الاجتماعي" },
     keys: [
       { key: "free_shipping_threshold", label: { en: "Free Shipping Threshold (EGP)", ar: "حد الشحن المجاني (ج.م)" }, type: "number" },
+      { key: "order_bump_product_slugs", label: { en: "Suggested Products", ar: "المنتجات المقترحة" } },
+      { key: "order_bump_price", label: { en: "Suggested Product Checkout Price (EGP)", ar: "سعر المنتج المقترح في الدفع (ج.م)" }, type: "number" },
+      { key: "order_bump_desc", label: { en: "Suggested Product Description", ar: "وصف المنتج المقترح" }, bilingual: true },
       { key: "stat_customers", label: { en: "Customer Count", ar: "عدد العملاء" }, type: "number" },
       { key: "stat_carwashes", label: { en: "Car Wash Count", ar: "عدد الغسلات" }, type: "number" },
       { key: "stat_rating", label: { en: "Rating", ar: "التقييم" }, type: "number" },
@@ -87,22 +130,37 @@ export default function CustomizePage() {
   const toast = useToast();
 
   const [fields, setFields] = useState<Fields>(DEFAULTS);
+  const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/settings")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: { key: string; value_en: string; value_ar: string }[]) => {
+    Promise.all([
+      fetch("/api/admin/settings").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/products").then((r) => (r.ok ? r.json() : { products: [] })),
+    ])
+      .then(([settings, productsData]: [
+        { key: string; value_en: string; value_ar: string }[],
+        { products?: ProductOption[] },
+      ]) => {
         setFields((prev) => {
           const next = { ...prev };
-          for (const row of data) {
+          for (const row of settings) {
             if (row.key in next) {
               next[row.key] = { value_en: row.value_en, value_ar: row.value_ar };
             }
           }
+          const oldSlug = settings.find((row) => row.key === "order_bump_product_slug")?.value_en;
+          const hasNewSelection = next.order_bump_product_slugs.value_en !== "[]";
+          if (!hasNewSelection && oldSlug) {
+            next.order_bump_product_slugs = {
+              value_en: JSON.stringify([oldSlug]),
+              value_ar: "",
+            };
+          }
           return next;
         });
+        setProducts(productsData.products ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -184,7 +242,28 @@ export default function CustomizePage() {
                   <span className="mb-1.5 block text-xs font-medium text-fg-dim">
                     {ar ? label.ar : label.en}
                   </span>
-                  {bilingual ? (
+                  {type === "image" ? (
+                    <ImageUpload
+                      value={fields[key].value_en}
+                      onChange={(value) => update(key, "value_en", value)}
+                      label={ar ? label.ar : label.en}
+                      lang={lang}
+                      aspectRatio={16 / 9}
+                    />
+                  ) : type === "hero-images" ? (
+                    <HeroImagesEditor
+                      value={fields[key].value_en}
+                      lang={lang}
+                      onChange={(value) => update(key, "value_en", value)}
+                    />
+                  ) : key === "order_bump_product_slugs" ? (
+                    <ProductMultiPicker
+                      value={fields[key].value_en}
+                      products={products}
+                      lang={lang}
+                      onChange={(value) => update(key, "value_en", value)}
+                    />
+                  ) : bilingual ? (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="block">
                         <span className="mb-1 block text-[11px] text-fg-dim/60">English</span>
@@ -217,6 +296,214 @@ export default function CustomizePage() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function parseProductSlugs(value: string): string[] {
+  if (!value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.map((slug) => String(slug).trim()).filter(Boolean).slice(0, 3);
+    }
+  } catch {
+    return value.split(",").map((slug) => slug.trim()).filter(Boolean).slice(0, 3);
+  }
+  return [];
+}
+
+function parseHeroImageUrls(value: string): string[] {
+  if (!value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.map((src) => String(src).trim()).slice(0, 12);
+    }
+  } catch {
+    return value
+      .split(/[\n,]/)
+      .map((src) => src.trim())
+      .filter(Boolean)
+      .slice(0, 12);
+  }
+  return [];
+}
+
+function HeroImagesEditor({
+  value,
+  lang,
+  onChange,
+}: {
+  value: string;
+  lang: "en" | "ar";
+  onChange: (value: string) => void;
+}) {
+  const ar = lang === "ar";
+  const parsedImages = parseHeroImageUrls(value);
+  const images = parsedImages.length > 0 ? parsedImages : DEFAULT_HERO_IMAGES;
+
+  function commit(nextImages: string[]) {
+    onChange(JSON.stringify(nextImages.slice(0, 12)));
+  }
+
+  function updateImage(index: number, src: string) {
+    commit(images.map((image, i) => (i === index ? src : image)));
+  }
+
+  function removeImage(index: number) {
+    if (images.length <= 1) return;
+    commit(images.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-white/60 p-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {images.map((src, index) => (
+          <div key={`${index}-${src || "empty"}`} className="relative rounded-xl border border-border bg-white p-2">
+            <ImageUpload
+              value={src}
+              onChange={(nextSrc) => updateImage(index, nextSrc)}
+              label={`${ar ? "صورة" : "Image"} ${index + 1}`}
+              lang={lang}
+              aspectRatio={1}
+            />
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeImage(index)}
+                className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
+              >
+                <X size={12} />
+                {ar ? "حذف" : "Remove"}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-fg-dim">
+          {ar
+            ? "تظهر هذه الصور في كروت المنتجات المتحركة داخل الهيرو."
+            : "These images rotate in the hero product cards."}
+        </p>
+        <button
+          type="button"
+          onClick={() => commit([...images, ""])}
+          disabled={images.length >= 12}
+          className="rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {ar ? "إضافة صورة" : "Add image"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProductMultiPicker({
+  value,
+  products,
+  lang,
+  onChange,
+}: {
+  value: string;
+  products: ProductOption[];
+  lang: "en" | "ar";
+  onChange: (value: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const ar = lang === "ar";
+  const selectedSlugs = parseProductSlugs(value);
+  const selectedProducts = selectedSlugs
+    .map((slug) => products.find((product) => product.slug === slug))
+    .filter((product): product is ProductOption => Boolean(product));
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredProducts = products
+    .filter((product) => product.is_active)
+    .filter((product) => {
+      if (!normalizedQuery) return true;
+      return [product.name_en, product.name_ar, product.slug].some((item) =>
+        item.toLowerCase().includes(normalizedQuery),
+      );
+    })
+    .slice(0, 8);
+
+  function commit(slugs: string[]) {
+    onChange(JSON.stringify(slugs.slice(0, 3)));
+  }
+
+  function add(slug: string) {
+    if (selectedSlugs.includes(slug) || selectedSlugs.length >= 3) return;
+    commit([...selectedSlugs, slug]);
+  }
+
+  function remove(slug: string) {
+    commit(selectedSlugs.filter((selectedSlug) => selectedSlug !== slug));
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-white/60 p-3">
+      <div className="relative">
+        <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fg-dim" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={ar ? "ابحث عن منتج" : "Search products"}
+          className={`${inputCls} pl-9`}
+        />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {selectedProducts.map((product) => (
+          <button
+            key={product.slug}
+            type="button"
+            onClick={() => remove(product.slug)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-medium text-brand"
+          >
+            {ar ? product.name_ar : product.name_en}
+            <X size={12} />
+          </button>
+        ))}
+        <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-fg-dim">
+          {selectedSlugs.length}/3
+        </span>
+      </div>
+
+      <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-border bg-white">
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => {
+            const selected = selectedSlugs.includes(product.slug);
+            const disabled = !selected && selectedSlugs.length >= 3;
+            return (
+              <button
+                key={product.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => (selected ? remove(product.slug) : add(product.slug))}
+                className="flex w-full items-center gap-3 border-b border-border px-3 py-2 text-left transition last:border-b-0 hover:bg-brand/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${selected ? "border-brand bg-brand text-white" : "border-border"}`}>
+                  {selected && <Check size={12} />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-fg">
+                    {ar ? product.name_ar : product.name_en}
+                  </span>
+                  <span className="block truncate text-xs text-fg-dim">
+                    {product.slug} · {product.price} EGP · {product.stock} stock
+                  </span>
+                </span>
+              </button>
+            );
+          })
+        ) : (
+          <p className="px-3 py-4 text-center text-xs text-fg-dim">
+            {ar ? "لا توجد منتجات" : "No products found"}
+          </p>
+        )}
       </div>
     </div>
   );

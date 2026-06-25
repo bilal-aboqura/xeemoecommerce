@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Loader2,
   Lock,
-  MessageCircle,
   ChevronDown,
   ChevronUp,
   Wind,
@@ -18,11 +17,10 @@ import {
   Check,
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
-import { useCart, clearCart, addToCart } from "@/lib/cart";
+import { useCart, clearCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/utils";
 import type { GovernorateOption } from "@/lib/data/locations";
 
-const WA_NUMBER = "201150301033";
 
 interface BumpProduct {
   id: string;
@@ -31,6 +29,8 @@ interface BumpProduct {
   name_ar: string;
   originalPrice: number;
   bumpPrice: number;
+  desc_en?: string;
+  desc_ar?: string;
   image: string | null;
   stock: number;
 }
@@ -55,9 +55,12 @@ export default function CheckoutPage() {
   const [bumpAdded, setBumpAdded] = useState(false);
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
   const [bumpProduct, setBumpProduct] = useState<BumpProduct | null>(null);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(600);
 
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const bumpTotal = bumpAdded && bumpProduct ? bumpProduct.bumpPrice : 0;
+  const checkoutItemsTotal = subtotal + bumpTotal;
+  const freeShipping = checkoutItemsTotal >= freeShippingThreshold;
 
   useEffect(() => {
     fetch("/api/checkout-data")
@@ -65,6 +68,10 @@ export default function CheckoutPage() {
       .then((d) => {
         setGovernorates(d.governorates ?? []);
         if (d.bumpProduct) setBumpProduct(d.bumpProduct);
+        const threshold = Number(d.freeShippingThreshold);
+        if (Number.isFinite(threshold) && threshold > 0) {
+          setFreeShippingThreshold(threshold);
+        }
       })
       .catch(() => {});
   }, []);
@@ -81,23 +88,13 @@ export default function CheckoutPage() {
   }
 
   const hasLocation = Boolean(form.governorate && form.city);
-  const total = subtotal + bumpTotal + (hasLocation ? shipping ?? 0 : 0);
+  const effectiveShipping = freeShipping ? 0 : shipping ?? 0;
+  const total = checkoutItemsTotal + (hasLocation ? effectiveShipping : 0);
+  const bumpDesc = bumpProduct
+    ? (ar ? bumpProduct.desc_ar : bumpProduct.desc_en) || t.checkout.bumpDesc
+    : t.checkout.bumpDesc;
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) { setForm((f) => ({ ...f, [key]: value })); }
-
-  function buildWhatsAppUrl() {
-    const lines = [
-      ar ? "مرحبا، حابب أطلب المنتجات دي:" : "Hi, I'd like to order these products:",
-      "",
-      ...items.map((i) => `- ${ar ? i.name_ar : i.name_en} x${i.quantity} (${formatPrice(i.price * i.quantity, lang)})`),
-      "",
-      `${ar ? "الإجمالي" : "Total"}: ${formatPrice(subtotal, lang)}`,
-    ];
-    if (form.customer_name) lines.push(`${ar ? "الاسم" : "Name"}: ${form.customer_name}`);
-    if (form.customer_phone) lines.push(`${ar ? "الموبايل" : "Phone"}: ${form.customer_phone}`);
-    if (form.governorate) lines.push(`${ar ? "المحافظة" : "Gov"}: ${form.governorate}`);
-    return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -272,7 +269,20 @@ export default function CheckoutPage() {
 
           <dl className="mt-5 space-y-2.5 border-t border-border pt-5 text-sm">
             <Row label={t.cart.subtotal} value={formatPrice(subtotal, lang)} />
-            <Row label={t.cart.shipping} value={!hasLocation ? (ar ? "اختر العنوان" : "Select address") : shippingLoading ? "..." : formatPrice(shipping ?? 0, lang)} dim={!hasLocation || shippingLoading} />
+            {bumpTotal > 0 && <Row label={ar ? "عرض إضافي" : "Add-on offer"} value={formatPrice(bumpTotal, lang)} />}
+            <Row
+              label={t.cart.shipping}
+              value={
+                !hasLocation
+                  ? (ar ? "اختر العنوان" : "Select address")
+                  : shippingLoading
+                    ? "..."
+                    : freeShipping
+                      ? (ar ? "مجاني" : "Free")
+                      : formatPrice(effectiveShipping, lang)
+              }
+              dim={!hasLocation || shippingLoading}
+            />
           </dl>
           <div className="mt-5 flex justify-between border-t border-border pt-5">
             <span className="font-semibold text-fg">{t.cart.total}</span>
@@ -293,7 +303,7 @@ export default function CheckoutPage() {
                       {ar ? `أضف ${bumpProduct.name_ar}` : `Add ${bumpProduct.name_en}`}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-fg-dim">{t.checkout.bumpDesc}</p>
+                  <p className="mt-1 text-xs text-fg-dim">{bumpDesc}</p>
                   <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-sm font-bold text-gold">{formatPrice(bumpProduct.bumpPrice, lang)}</span>
                     <span className="text-xs text-fg-dim line-through">{formatPrice(bumpProduct.originalPrice, lang)}</span>
@@ -315,22 +325,7 @@ export default function CheckoutPage() {
               <Lock size={10} />
               {t.checkout.secureData}
             </p>
-            <p className="flex items-center justify-center gap-1.5 text-[11px] text-fg-dim">
-              <MessageCircle size={10} />
-              {t.checkout.whatsappConfirm}
-            </p>
           </div>
-
-          {/* WhatsApp express */}
-          <a
-            href={buildWhatsAppUrl()}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 px-4 py-2.5 text-sm font-medium text-[#25D366] transition hover:bg-[#25D366]/10"
-          >
-            <MessageCircle size={16} />
-            {t.checkout.orderViaWhatsapp}
-          </a>
         </aside>
 
         {/* Mobile sticky bottom bar */}
@@ -362,21 +357,12 @@ export default function CheckoutPage() {
               </button>
             </div>
 
-            {/* Security + WhatsApp */}
+            {/* Security reassurance */}
             <div className="flex items-center justify-between">
               <p className="flex items-center gap-1 text-[10px] text-fg-dim">
                 <Lock size={9} />
                 {t.checkout.secureData}
               </p>
-              <a
-                href={buildWhatsAppUrl()}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-[10px] font-medium text-[#25D366]"
-              >
-                <MessageCircle size={10} />
-                {t.checkout.orderViaWhatsapp}
-              </a>
             </div>
           </div>
         </div>

@@ -8,7 +8,6 @@ import {
   Sparkles,
   Truck,
   CreditCard,
-  Shield,
   Car,
   Bike,
   Armchair,
@@ -94,6 +93,19 @@ const FAQ_ITEMS = [
   { q: "faq6q", a: "faq6a" },
 ] as const;
 
+const DEFAULT_HERO_BACKGROUND = "/images/hs.webp";
+
+const DEFAULT_HERO_IMAGES = [
+  { src: "/images/gold_1l.webp", alt: "Dashboard Shiner Gold" },
+  { src: "/images/foam4k.webp", alt: "Active Foam 4K" },
+  { src: "/images/tireprime.webp", alt: "Tire Prime" },
+  { src: "/images/enginecleaner-1l.webp", alt: "Engine Cleaner" },
+  { src: "/images/universal-1l.webp", alt: "Universal Cleaner" },
+  { src: "/images/rims-4k.webp", alt: "Rims Cleaner" },
+  { src: "/images/candy-4k.webp", alt: "Candy Air Freshener" },
+  { src: "/images/black-ice-4k.webp", alt: "Black Ice Air Freshener" },
+];
+
 /* ─── Hero ────────────────────────────────────────────────────────────────── */
 
 export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
@@ -101,24 +113,49 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
   const ar = lang === "ar";
   const [activeIndex, setActiveIndex] = useState(0);
   const o = overrides ?? {};
-
-  const HERO_IMAGES = [
-    { src: "/images/gold_1l.webp", alt: "Dashboard Shiner Gold" },
-    { src: "/images/foam4k.webp", alt: "Active Foam 4K" },
-    { src: "/images/tireprime.webp", alt: "Tire Prime" },
-    { src: "/images/enginecleaner-1l.webp", alt: "Engine Cleaner" },
-    { src: "/images/universal-1l.webp", alt: "Universal Cleaner" },
-    { src: "/images/rims-4k.webp", alt: "Rims Cleaner" },
-    { src: "/images/candy-4k.webp", alt: "Candy Air Freshener" },
-    { src: "/images/black-ice-4k.webp", alt: "Black Ice Air Freshener" }
+  const marqueeItems = [
+    {
+      ...MARQUEE_ITEMS[0],
+      en: o.marquee_cod_en || MARQUEE_ITEMS[0].en,
+      ar: o.marquee_cod_ar || MARQUEE_ITEMS[0].ar,
+    },
+    {
+      ...MARQUEE_ITEMS[1],
+      en: o.marquee_returns_en || MARQUEE_ITEMS[1].en,
+      ar: o.marquee_returns_ar || MARQUEE_ITEMS[1].ar,
+    },
+    {
+      ...MARQUEE_ITEMS[2],
+      en: o.marquee_made_en || MARQUEE_ITEMS[2].en,
+      ar: o.marquee_made_ar || MARQUEE_ITEMS[2].ar,
+    },
+    {
+      ...MARQUEE_ITEMS[3],
+      en: o.marquee_shipping_en || MARQUEE_ITEMS[3].en,
+      ar: o.marquee_shipping_ar || MARQUEE_ITEMS[3].ar,
+    },
+    {
+      ...MARQUEE_ITEMS[4],
+      en: o.marquee_payments_en || MARQUEE_ITEMS[4].en,
+      ar: o.marquee_payments_ar || MARQUEE_ITEMS[4].ar,
+    },
   ];
 
+  const heroBackgroundImage = o.background_image || DEFAULT_HERO_BACKGROUND;
+  const heroImages = (o.product_images?.length ? o.product_images : DEFAULT_HERO_IMAGES.map((img) => img.src))
+    .map((src, index) => ({
+      src,
+      alt: DEFAULT_HERO_IMAGES[index]?.alt ?? `Hero product ${index + 1}`,
+    }));
+  const heroImageCount = heroImages.length;
+
   useEffect(() => {
+    if (heroImageCount <= 1) return;
     const interval = setInterval(() => {
-      setActiveIndex((curr) => (curr + 1) % HERO_IMAGES.length);
+      setActiveIndex((curr) => (curr + 1) % heroImageCount);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImageCount]);
 
   return (
     <>
@@ -126,7 +163,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
         {/* Full-width Faded Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/hs.webp"
+            src={heroBackgroundImage}
             alt="Hero Background"
             fill
             priority
@@ -181,7 +218,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
 
             <div className="relative z-10 h-80 w-80 animate-fade-in-up">
               <div className="relative h-full w-full overflow-hidden rounded-3xl bg-white shadow-2xl shadow-black/40">
-                {HERO_IMAGES.map((img, i) => {
+                {heroImages.map((img, i) => {
                   const isActive = i === activeIndex;
                   return (
                     <Image
@@ -201,8 +238,8 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
             </div>
 
             <div className="absolute -right-4 top-8 h-20 w-20 animate-fade-in overflow-hidden rounded-2xl bg-white shadow-xl shadow-black/30" style={{ animationDelay: "0.3s" }}>
-              {HERO_IMAGES.map((img, i) => {
-                const isActive = i === (activeIndex + 1) % HERO_IMAGES.length;
+              {heroImages.map((img, i) => {
+                const isActive = i === (activeIndex + 1) % heroImages.length;
                 return (
                   <Image
                     key={img.src}
@@ -218,8 +255,8 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
               })}
             </div>
             <div className="absolute -left-4 bottom-12 h-20 w-20 animate-fade-in overflow-hidden rounded-2xl bg-white shadow-xl shadow-black/30" style={{ animationDelay: "0.5s" }}>
-              {HERO_IMAGES.map((img, i) => {
-                const isActive = i === (activeIndex + 2) % HERO_IMAGES.length;
+              {heroImages.map((img, i) => {
+                const isActive = i === (activeIndex + 2) % heroImages.length;
                 return (
                   <Image
                     key={img.src}
@@ -246,7 +283,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
         <div className="marquee-track">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((copy) => (
             <div key={copy} className="flex shrink-0 gap-4 px-2">
-              {MARQUEE_ITEMS.map((m, i) => (
+              {marqueeItems.map((m, i) => (
                 <div
                   key={`${copy}-${i}`}
                   className="flex shrink-0 cursor-default items-center gap-2.5 whitespace-nowrap rounded-full border-2 border-brand/20 bg-white px-8 py-3.5 text-[15px] font-bold text-black shadow-lg shadow-black/5 transition-all duration-300 hover:border-brand/40 hover:shadow-xl hover:shadow-brand/10"
@@ -266,8 +303,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
 /* ─── Problem / Agitation Section ─────────────────────────────────────────── */
 
 export function ProblemSection() {
-  const { t, lang } = useLang();
-  const ar = lang === "ar";
+  const { t } = useLang();
 
   return (
     <section className="mx-auto max-w-4xl px-5 py-20 text-center">
@@ -628,30 +664,9 @@ export function CategoryGrid() {
 export function Testimonials({ stats }: { stats?: SocialStats }) {
   const { t, lang } = useLang();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const ar = lang === "ar";
 
   const s = stats ?? { customers: "+500", carWashes: "+50", rating: "4.8/5" };
-
-  function updateArrows() {
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    const scrollPos = Math.abs(el.scrollLeft);
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    
-    const isAtStart = scrollPos < 10;
-    const isAtEnd = scrollPos > maxScroll - 10;
-
-    if (ar) {
-      setCanScrollRight(!isAtStart); // Can scroll right (back) if not at start
-      setCanScrollLeft(!isAtEnd);    // Can scroll left (forward) if not at end
-    } else {
-      setCanScrollLeft(!isAtStart);
-      setCanScrollRight(!isAtEnd);
-    }
-  }
 
   function scroll(action: "prev" | "next") {
     const el = scrollRef.current;
@@ -704,7 +719,6 @@ export function Testimonials({ stats }: { stats?: SocialStats }) {
 
       <div
         ref={scrollRef}
-        onScroll={updateArrows}
         className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 scrollbar-none"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >

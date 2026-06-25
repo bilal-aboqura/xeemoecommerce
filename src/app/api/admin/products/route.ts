@@ -38,7 +38,7 @@ export async function GET() {
 
   const { data } = await sb
     .from("products")
-    .select("id, name_en, name_ar, price, images, stock, is_active")
+    .select("id, slug, name_en, name_ar, price, images, stock, is_active")
     .order("name_en", { ascending: true });
 
   return NextResponse.json({ products: data ?? [] });
