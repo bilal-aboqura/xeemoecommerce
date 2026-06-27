@@ -93,7 +93,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${cairo.variable} ${oswald.variable} ${bebas.variable} ${roboto.variable} h-full antialiased`}
+      className={`${cairo.variable} ${oswald.variable} ${bebas.variable} ${roboto.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col">
         <Script id="meta-pixel" strategy="afterInteractive">

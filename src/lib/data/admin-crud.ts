@@ -173,6 +173,26 @@ export async function adminListCustomers(): Promise<AdminCustomer[]> {
   );
 }
 
+export interface AdminNewsletterSubscriber {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
+export async function adminListNewsletterSubscribers(): Promise<AdminNewsletterSubscriber[]> {
+  const sb = getSupabaseServiceClient();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("newsletter_subscribers")
+    .select("id, email, created_at")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("adminListNewsletterSubscribers:", error.message);
+    return [];
+  }
+  return (data ?? []) as AdminNewsletterSubscriber[];
+}
+
 // ── Discounts ────────────────────────────────────────────────────────────────
 export interface AdminDiscount {
   id: string;

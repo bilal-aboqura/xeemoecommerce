@@ -174,6 +174,14 @@ create table if not exists public.settings (
   value_ar text not null default ''
 );
 
+create table if not exists public.newsletter_subscribers (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null,
+  created_at timestamptz not null default now()
+);
+create unique index if not exists newsletter_subscribers_email_lower_idx
+  on public.newsletter_subscribers (lower(email));
+
 -- =====================================================================
 -- Triggers: updated_at, and auto-create profile on signup
 -- =====================================================================
@@ -220,6 +228,7 @@ alter table public.profiles       enable row level security;
 alter table public.addresses      enable row level security;
 alter table public.orders         enable row level security;
 alter table public.order_items    enable row level security;
+alter table public.newsletter_subscribers enable row level security;
 
 -- public reads
 drop policy if exists "categories_public_read" on public.categories;
