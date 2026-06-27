@@ -67,7 +67,7 @@ export function LoginForm() {
             alt="Xeemo" 
             width={160} 
             height={48} 
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain brightness-0"
           />
         </div>
         <h1 className="font-display text-3xl tracking-wide text-fg">

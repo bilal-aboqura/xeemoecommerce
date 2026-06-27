@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { useCart, clearCart } from "@/lib/cart";
+import { calcItemsSubtotal, calcVolumeDiscount } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
 import type { GovernorateOption } from "@/lib/data/locations";
 
@@ -57,9 +58,12 @@ export default function CheckoutPage() {
   const [bumpProduct, setBumpProduct] = useState<BumpProduct | null>(null);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(600);
 
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const subtotal = calcItemsSubtotal(items);
+  const volumeDiscount = calcVolumeDiscount(items);
+  const discountedSubtotal = subtotal - volumeDiscount;
   const bumpTotal = bumpAdded && bumpProduct ? bumpProduct.bumpPrice : 0;
   const checkoutItemsTotal = subtotal + bumpTotal;
+  const checkoutPayableItemsTotal = discountedSubtotal + bumpTotal;
   const freeShipping = checkoutItemsTotal >= freeShippingThreshold;
 
   useEffect(() => {
@@ -89,7 +93,7 @@ export default function CheckoutPage() {
 
   const hasLocation = Boolean(form.governorate && form.city);
   const effectiveShipping = freeShipping ? 0 : shipping ?? 0;
-  const total = checkoutItemsTotal + (hasLocation ? effectiveShipping : 0);
+  const total = checkoutPayableItemsTotal + (hasLocation ? effectiveShipping : 0);
   const bumpDesc = bumpProduct
     ? (ar ? bumpProduct.desc_ar : bumpProduct.desc_en) || t.checkout.bumpDesc
     : t.checkout.bumpDesc;
@@ -149,7 +153,7 @@ export default function CheckoutPage() {
           className="glass flex w-full items-center justify-between p-4"
         >
           <span className="text-sm text-fg-muted">
-            {items.length} {t.checkout.items} &mdash; <span className="font-semibold text-brand">{formatPrice(subtotal, lang)}</span>
+            {items.length} {t.checkout.items} &mdash; <span className="font-semibold text-brand">{formatPrice(discountedSubtotal, lang)}</span>
           </span>
           {mobileSummaryOpen ? <ChevronUp size={16} className="text-fg-dim" /> : <ChevronDown size={16} className="text-fg-dim" />}
         </button>
@@ -269,6 +273,12 @@ export default function CheckoutPage() {
 
           <dl className="mt-5 space-y-2.5 border-t border-border pt-5 text-sm">
             <Row label={t.cart.subtotal} value={formatPrice(subtotal, lang)} />
+            {volumeDiscount > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-fg-dim">{ar ? "خصم الكمية" : "Volume discount"}</dt>
+                <dd className="font-medium text-emerald">-{formatPrice(volumeDiscount, lang)}</dd>
+              </div>
+            )}
             {bumpTotal > 0 && <Row label={ar ? "عرض إضافي" : "Add-on offer"} value={formatPrice(bumpTotal, lang)} />}
             <Row
               label={t.cart.shipping}

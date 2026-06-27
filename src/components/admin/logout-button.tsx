@@ -20,7 +20,7 @@ export function LogoutButton() {
     <button
       type="button"
       onClick={handleLogout}
-      className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-fg-dim transition hover:bg-white/[0.04] hover:text-brand"
+      className="flex items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-2 text-sm text-fg-dim transition hover:border-border-hover hover:text-brand"
     >
       <LogOut size={14} />
       <span className="hidden sm:inline">{t.admin.logout}</span>

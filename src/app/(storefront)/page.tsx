@@ -1,16 +1,20 @@
+import { HomeHero } from "@/components/storefront/home-hero-carousel";
+import { CategoryGrid } from "@/components/storefront/category-grid";
 import {
-  HomeHero,
-  CategoryGrid,
-  ProblemSection,
   TrustGuaranteeSection,
   Testimonials,
   WhyXeemoSection,
   BundleOffersSection,
-  FAQSection,
   FinalCTASection,
 } from "@/components/storefront/home-hero";
 import { ProductCard } from "@/components/storefront/product-card";
-import { getFeaturedProducts, resolveBundles, getSocialStats, getHeroOverrides } from "@/lib/data/catalog";
+import {
+  getAllCategories,
+  getFeaturedProducts,
+  resolveBundles,
+  getSocialStats,
+  getHeroOverrides,
+} from "@/lib/data/catalog";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getLang } from "@/lib/i18n/server";
 import { ArrowRight } from "lucide-react";
@@ -18,11 +22,12 @@ import Link from "next/link";
 
 export default async function Home() {
   const supabase = await getSupabaseServerClient();
-  const [products, bundles, stats, heroOverrides] = await Promise.all([
-    getFeaturedProducts(4),
+  const [products, bundles, stats, heroOverrides, categories] = await Promise.all([
+    getFeaturedProducts(8),
     resolveBundles(),
     getSocialStats(),
     getHeroOverrides(),
+    getAllCategories(),
   ]);
   const connected = Boolean(supabase);
   const lang = await getLang();
@@ -34,12 +39,9 @@ export default async function Home() {
       <HomeHero overrides={heroOverrides} />
 
       {/* 2. Categories */}
-      <CategoryGrid />
+      <CategoryGrid categories={categories} />
 
-      {/* 3. Problem / Agitation */}
-      <ProblemSection />
-
-      {/* 3. Best Sellers (limited to top 4) */}
+      {/* 3. Best Sellers (limited to top 8) */}
       <section id="bestsellers" className="mx-auto max-w-7xl px-5 pb-20">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -59,7 +61,7 @@ export default async function Home() {
           </Link>
         </div>
         {connected && products.length > 0 ? (
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-4">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -84,9 +86,6 @@ export default async function Home() {
 
       {/* 7. Bundle Offers (with real products from DB) */}
       <BundleOffersSection bundles={bundles} />
-
-      {/* 8. FAQ / Objection Killer */}
-      <FAQSection />
 
       {/* 9. Final CTA */}
       <FinalCTASection />

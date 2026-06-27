@@ -7,28 +7,29 @@
 
 @theme {
   /* ── Brand ─────────────────────────────────────────────── */
-  --color-brand: #dc2626;
-  --color-brand-dark: #991b1b;
-  --color-brand-soft: #fca5a5;
-  --color-brand-glow: rgba(220, 38, 38, 0.15);
+  --color-brand: #e10600;
+  --color-brand-dark: #a40000;
+  --color-brand-soft: #ff5a52;
+  --color-brand-glow: rgba(225, 6, 0, 0.16);
 
   /* ── Accent ────────────────────────────────────────────── */
-  --color-gold: #d97706;
-  --color-stargold: #f59e0b;
+  --color-gold: #b91c1c;
+  --color-stargold: #ef4444;
   --color-emerald: #059669;
 
   /* ── Surfaces ──────────────────────────────────────────── */
-  --color-ink: #09090b;
-  --color-ink-2: #18181b;
-  --color-surface: #1c1c21;
-  --color-surface-raised: #27272a;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-hover: rgba(255, 255, 255, 0.12);
+  --color-bg: #ffffff;
+  --color-ink: #ffffff;
+  --color-ink-2: #111111;
+  --color-surface: #f5f5f5;
+  --color-surface-raised: #ffffff;
+  --color-border: rgba(17, 17, 17, 0.12);
+  --color-border-hover: rgba(225, 6, 0, 0.32);
 
   /* ── Text ──────────────────────────────────────────────── */
-  --color-fg: #fafafa;
-  --color-fg-muted: #d4d4d8;
-  --color-fg-dim: #71717a;
+  --color-fg: #111111;
+  --color-fg-muted: #343434;
+  --color-fg-dim: #707070;
 
   /* ── Fonts ─────────────────────────────────────────────── */
   --font-sans: var(--font-cairo), ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -41,7 +42,7 @@
 }
 
 :root {
-  --background: var(--color-ink);
+  --background: var(--color-bg);
   --foreground: var(--color-fg);
 }
 
@@ -52,7 +53,7 @@ html {
 }
 
 body {
-  background: var(--color-ink);
+  background: var(--color-bg);
   color: var(--foreground);
   font-family: var(--font-sans);
   min-height: 100dvh;
@@ -101,9 +102,9 @@ html[dir="rtl"] .pill {
 
 /* ── Glassmorphism v2 ────────────────────────────────────── */
 .glass {
-  background: rgba(24, 24, 27, 0.6);
-  backdrop-filter: blur(16px) saturate(1.3);
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-glass);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -113,12 +114,12 @@ html[dir="rtl"] .pill {
 }
 
 .glass-elevated {
-  background: rgba(28, 28, 33, 0.8);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(24px) saturate(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-glass);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  box-shadow: 0 12px 36px rgba(17, 17, 17, 0.08), 0 0 0 1px rgba(17, 17, 17, 0.03) inset;
 }
 
 .admin-light {
@@ -167,7 +168,7 @@ html[dir="rtl"] .pill {
   width: 100%;
   border-radius: 12px;
   border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.92);
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   color: var(--color-fg);
@@ -217,7 +218,7 @@ select option {
   box-shadow: 0 0 20px var(--color-brand-glow);
 }
 .btn-secondary {
-  background: transparent;
+  background: white;
   border: 1px solid var(--color-border);
   color: var(--color-fg);
 }
@@ -238,6 +239,39 @@ select option {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes loadingRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes loadingRotateReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.65; transform: translateX(-50%) scale(0.92); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+}
+@keyframes loadingFloat {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -14px, 0); }
+}
+@keyframes loadingDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-12px, 10px, 0) scale(1.04); }
+}
+@keyframes loadingBar {
+  0% { transform: translateX(-60%) scaleX(0.85); }
+  50% { transform: translateX(45%) scaleX(1); }
+  100% { transform: translateX(180%) scaleX(0.85); }
+}
+@keyframes loadingShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -20% 0; }
+}
+@keyframes loadingBlink {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1); }
 }
 /* Infinite seamless marquee: two identical strips side by side, the first
    translates its full width to the left, creating a perfect loop. */
@@ -277,7 +311,7 @@ html[dir="rtl"] .marquee-track {
 .shipping-bar {
   height: 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(17, 17, 17, 0.08);
   overflow: hidden;
 }
 .shipping-bar-fill {
@@ -292,14 +326,14 @@ html[dir="rtl"] .marquee-track {
 
 /* ── Order bump card ─────────────────────────────────────── */
 .bump-card {
-  background: rgba(217, 119, 6, 0.06);
-  border: 1px dashed rgba(217, 119, 6, 0.3);
+  background: rgba(225, 6, 0, 0.04);
+  border: 1px dashed rgba(225, 6, 0, 0.28);
   border-radius: var(--radius-glass);
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 .bump-card-active {
-  background: rgba(217, 119, 6, 0.1);
-  border-color: var(--color-gold);
+  background: rgba(225, 6, 0, 0.08);
+  border-color: var(--color-brand);
 }
 
 /* ── FAQ accordion ───────────────────────────────────────── */
@@ -330,3 +364,11 @@ html[dir="rtl"] .marquee-track {
 .animate-fade-in { animation: fadeIn 0.5s ease both; }
 .animate-fade-in-up { animation: fadeInUp 0.5s ease both; }
 .animate-slide-down { animation: slideDown 0.3s ease both; }
+.animate-loading-rotate { animation: loadingRotate 14s linear infinite; }
+.animate-loading-rotate-reverse { animation: loadingRotateReverse 12s linear infinite; }
+.animate-loading-pulse { animation: loadingPulse 4s ease-in-out infinite; }
+.animate-loading-float { animation: loadingFloat 6s ease-in-out infinite; }
+.animate-loading-drift { animation: loadingDrift 9s ease-in-out infinite; }
+.animate-loading-bar { animation: loadingBar 2.2s ease-in-out infinite; }
+.animate-loading-shimmer { animation: loadingShimmer 2.4s linear infinite; }
+.animate-loading-blink { animation: loadingBlink 1.4s ease-in-out infinite; }

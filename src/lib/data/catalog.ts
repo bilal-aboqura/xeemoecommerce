@@ -429,6 +429,7 @@ export async function getCheckoutSettings(): Promise<CheckoutSettings> {
 /* ─── Hero overrides (editable from admin Customize page) ─────────────────── */
 
 export interface HeroOverrides {
+  slides?: HeroSlide[];
   background_image?: string;
   product_images?: string[];
   title_en?: string;
@@ -455,11 +456,54 @@ export interface HeroOverrides {
   marquee_payments_ar?: string;
 }
 
+export interface HeroSlide {
+  image: string;
+  eyebrow_en?: string;
+  eyebrow_ar?: string;
+  title_en?: string;
+  title_ar?: string;
+  subtitle_en?: string;
+  subtitle_ar?: string;
+  cta_en?: string;
+  cta_ar?: string;
+  href?: string;
+}
+
+function parseHeroSlides(value: string | null | undefined): HeroSlide[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    const slides = (parsed as unknown[]).map((slide): HeroSlide | null => {
+        if (!slide || typeof slide !== "object") return null;
+        const record = slide as Record<string, unknown>;
+        return {
+          image: String(record.image ?? "").trim(),
+          eyebrow_en: String(record.eyebrow_en ?? "").trim() || undefined,
+          eyebrow_ar: String(record.eyebrow_ar ?? "").trim() || undefined,
+          title_en: String(record.title_en ?? "").trim() || undefined,
+          title_ar: String(record.title_ar ?? "").trim() || undefined,
+          subtitle_en: String(record.subtitle_en ?? "").trim() || undefined,
+          subtitle_ar: String(record.subtitle_ar ?? "").trim() || undefined,
+          cta_en: String(record.cta_en ?? "").trim() || undefined,
+          cta_ar: String(record.cta_ar ?? "").trim() || undefined,
+          href: String(record.href ?? "").trim() || undefined,
+        };
+      })
+      .filter((slide): slide is HeroSlide => Boolean(slide?.image))
+      .slice(0, 8);
+    return slides;
+  } catch {
+    return [];
+  }
+}
+
 export async function getHeroOverrides(): Promise<HeroOverrides> {
   const supabase = await getSupabaseServerClient();
   if (!supabase) return {};
 
   const keys = [
+    "hero_slides",
     "hero_background_image", "hero_images",
     "hero_title", "hero_subtitle", "hero_cta",
     "hero_pill_cod", "hero_pill_returns", "hero_pill_shipping",
@@ -477,6 +521,7 @@ export async function getHeroOverrides(): Promise<HeroOverrides> {
   const g = (k: string) => map.get(k);
 
   return {
+    slides: parseHeroSlides(g("hero_slides")?.en),
     background_image: g("hero_background_image")?.en || undefined,
     product_images: parseImageList(g("hero_images")?.en),
     title_en: g("hero_title")?.en || undefined,

@@ -28,7 +28,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
 import type { ResolvedBundle, SocialStats, HeroOverrides } from "@/lib/data/catalog";
 
@@ -43,10 +43,10 @@ const MARQUEE_ITEMS = [
 ];
 
 const CATEGORIES = [
-  { href: "/category/carcare", key: "carcare" as const, Icon: Car },
-  { href: "/category/motocare", key: "motocare" as const, Icon: Bike },
-  { href: "/category/carpets", key: "carpets" as const, Icon: Armchair },
-  { href: "/category/air-freshener", key: "freshener" as const, Icon: Wind },
+  { href: "/category/carcare", key: "carcare" as const, Icon: Car, image: "/images/carcare.webp", imageClassName: "object-[center_30%]" },
+  { href: "/category/motocare", key: "motocare" as const, Icon: Bike, image: "/images/motocare.webp", imageClassName: "object-[center_35%]" },
+  { href: "/category/carpets", key: "carpets" as const, Icon: Armchair, image: "/images/carpetscare.webp", imageClassName: "object-center" },
+  { href: "/category/air-freshener", key: "freshener" as const, Icon: Wind, image: "/images/freshnerWEBPAGE.webp", imageClassName: "object-[center_40%]" },
 ];
 
 const TESTIMONIALS = [
@@ -179,7 +179,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
 
         <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 py-20 sm:py-28 lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-36">
           <div className="animate-fade-in-up">
-            <h1 className="font-heading text-4xl font-bold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-6xl">
+            <h1 className="font-heading text-4xl font-bold leading-tight tracking-tight text-fg sm:text-5xl lg:text-6xl">
               {(ar ? o.title_ar : o.title_en) || t.home.heroTitle}
             </h1>
 
@@ -195,7 +195,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
             </div>
 
             {/* Trust pills below CTA */}
-            <div className="mt-6 flex flex-wrap gap-2">
+            {/* <div className="mt-6 flex flex-wrap gap-2">
               <span className="pill pill-success gap-1.5">
                 <Banknote size={11} />
                 {(ar ? o.pill_cod_ar : o.pill_cod_en) || t.product.cod}
@@ -208,7 +208,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
                 <Truck size={11} />
                 {(ar ? o.pill_shipping_ar : o.pill_shipping_en) || (ar ? "شحن مجاني فوق 600 ج.م" : "Free shipping 600+ EGP")}
               </span>
-            </div>
+            </div> */}
           </div>
 
           <div className="relative hidden lg:flex lg:items-center lg:justify-center">
@@ -276,7 +276,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
       </section>
 
       {/* Marquee — pill-card style with edge fade */}
-      <div className="relative overflow-hidden border-y border-border bg-ink py-6">
+      {/* <div className="relative overflow-hidden border-y border-border bg-ink py-6">
         <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-24 bg-gradient-to-r from-ink to-transparent sm:w-40" />
         <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-24 bg-gradient-to-l from-ink to-transparent sm:w-40" />
         
@@ -295,7 +295,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

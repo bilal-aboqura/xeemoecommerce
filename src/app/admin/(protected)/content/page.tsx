@@ -2,6 +2,7 @@ import { adminListSettings } from "@/lib/data/admin-crud";
 import { getAllCategories } from "@/lib/data/catalog";
 import { getLang } from "@/lib/i18n/server";
 import { SettingsEditor } from "@/components/admin/settings-editor";
+import { AdminPageHeader } from "@/components/admin/page-header";
 
 export default async function AdminContentPage() {
   const lang = await getLang();
@@ -13,14 +14,15 @@ export default async function AdminContentPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-bold text-fg">
-        {ar ? "المحتوى" : "Content"}
-      </h1>
-      <p className="mt-1 text-sm text-fg-dim">
-        {ar
-          ? "حرر النصوص والمعلومات التي تظهر في الموقع."
-          : "Edit the text and info shown across the storefront."}
-      </p>
+      <AdminPageHeader
+        eyebrow={ar ? "محتوى المتجر" : "Storefront content"}
+        title={ar ? "المحتوى" : "Content"}
+        description={
+          ar
+            ? "حرر النصوص الأساسية والصور المرتبطة بالأقسام من شاشة واحدة."
+            : "Edit core storefront copy and category-linked imagery from one screen."
+        }
+      />
       <SettingsEditor settings={settings} categories={categories} lang={lang} />
     </div>
   );

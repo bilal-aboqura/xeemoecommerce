@@ -39,7 +39,7 @@ export function Navbar() {
             alt={t.brand} 
             width={160} 
             height={48} 
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain brightness-0"
             priority 
           />
           {/* <div className="hidden sm:block">

@@ -11,7 +11,7 @@ export function Footer() {
   const ar = lang === "ar";
 
   return (
-    <footer className="mt-auto border-t border-border bg-ink-2/40">
+    <footer className="mt-auto border-t border-border bg-surface">
       <div className="mx-auto max-w-7xl px-5 py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
@@ -22,7 +22,7 @@ export function Footer() {
                 alt={t.brand} 
                 width={120} 
                 height={32} 
-                className="h-8 w-auto object-contain"
+                className="h-8 w-auto object-contain brightness-0"
               />
               <span className="text-lg font-bold tracking-tight text-fg">
                 {t.brand}

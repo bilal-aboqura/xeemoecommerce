@@ -1,5 +1,6 @@
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCheckoutSettings } from "@/lib/data/catalog";
+import { calcItemsSubtotal, calcVolumeDiscount } from "@/lib/pricing";
 
 export interface CreateOrderInput {
   customer_name: string;
@@ -109,21 +110,13 @@ export async function resolveDiscount(
 }
 
 /**
- * Volume discount: 2 of the same product → 10% off those items,
- * 3+ → 15% off. Returns total discount amount across all qualifying items.
+ * Volume discount: 2 of the same product → 10% off the first 2 units,
+ * 3+ → 15% off the first 3 units. Returns total discount amount across all qualifying items.
  */
-export function calcVolumeDiscount(
+export function calcLegacyVolumeDiscount(
   items: CreateOrderInput["items"],
 ): number {
-  let totalDiscount = 0;
-  for (const item of items) {
-    if (item.quantity >= 3) {
-      totalDiscount += Number(item.price) * item.quantity * 0.15;
-    } else if (item.quantity >= 2) {
-      totalDiscount += Number(item.price) * item.quantity * 0.10;
-    }
-  }
-  return Math.round(totalDiscount * 100) / 100;
+  return calcVolumeDiscount(items);
 }
 
 /**
@@ -139,10 +132,7 @@ export async function createOrder(
   const sb = getSupabaseServiceClient();
   if (!sb || input.items.length === 0) return null;
 
-  const itemsTotal = input.items.reduce(
-    (s, i) => s + Number(i.price) * i.quantity,
-    0,
-  );
+  const itemsTotal = calcItemsSubtotal(input.items);
   const volumeDiscount = calcVolumeDiscount(input.items);
   const [shipping, checkoutSettings] = await Promise.all([
     getShippingCost(input.governorate, input.city),

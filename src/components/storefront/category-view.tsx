@@ -32,53 +32,66 @@ export function CategoryView({
 
   const visible = useMemo(() => {
     let list = [...products];
-    if (maxPrice !== "") list = list.filter((p) => Number(p.price) <= Number(maxPrice));
-    switch (sort) {
-      case "price-asc": list.sort((a, b) => Number(a.price) - Number(b.price)); break;
-      case "price-desc": list.sort((a, b) => Number(b.price) - Number(a.price)); break;
-      case "name": list.sort((a, b) => (ar ? a.name_ar : a.name_en).localeCompare(ar ? b.name_ar : b.name_en)); break;
-      default: list.sort((a, b) => Number(b.is_featured) - Number(a.is_featured) || Number(a.price) - Number(b.price));
+    if (maxPrice !== "") {
+      list = list.filter((p) => Number(p.price) <= Number(maxPrice));
     }
+
+    switch (sort) {
+      case "price-asc":
+        list.sort((a, b) => Number(a.price) - Number(b.price));
+        break;
+      case "price-desc":
+        list.sort((a, b) => Number(b.price) - Number(a.price));
+        break;
+      case "name":
+        list.sort((a, b) =>
+          (ar ? a.name_ar : a.name_en).localeCompare(ar ? b.name_ar : b.name_en),
+        );
+        break;
+      default:
+        list.sort(
+          (a, b) =>
+            Number(b.is_featured) - Number(a.is_featured) ||
+            Number(a.price) - Number(b.price),
+        );
+    }
+
     return list;
   }, [products, sort, maxPrice, ar]);
 
   return (
     <>
-      {/* Cinematic Card Hero */}
-      <section className="relative mx-auto max-w-7xl px-4 sm:px-5 pt-6 sm:pt-8">
-        <div className="group relative overflow-hidden rounded-[2.5rem] bg-ink ring-1 ring-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          
-          {/* Deep Cinematic Background */}
+      <section className="relative mx-auto max-w-7xl px-4 pt-6 sm:px-5 sm:pt-8">
+        <div className="group relative overflow-hidden rounded-[2.5rem] bg-[#111111] ring-1 ring-black/10 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
           {category.image && (
             <div className="pointer-events-none absolute inset-0 z-0">
-              <Image 
-                src={category.image} 
-                alt="Background" 
-                fill 
-                className="object-cover opacity-40 saturate-[1.2] transition-transform duration-[2000ms] ease-out group-hover:scale-105" 
+              <Image
+                src={category.image}
+                alt="Background"
+                fill
+                className="object-cover opacity-55 saturate-[1.1] transition-transform duration-[2000ms] ease-out group-hover:scale-105"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-transparent opacity-90" />
-              <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/40 to-transparent opacity-90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent" />
             </div>
           )}
 
-          {/* Content */}
-          <div className="relative z-10 p-8 sm:p-16 lg:p-20 flex flex-col justify-end min-h-[400px]">
-            <nav className="mb-6 flex items-center gap-2 text-xs font-semibold tracking-widest text-fg-dim uppercase animate-fade-in-up">
+          <div className="relative z-10 flex min-h-[400px] flex-col justify-end p-8 sm:p-16 lg:p-20">
+            <nav className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/65 animate-fade-in-up">
               <Link href="/" className="transition hover:text-brand">
                 {ar ? "الرئيسية" : "HOME"}
               </Link>
               <ChevronRight size={14} className="opacity-40" />
-              <span className="text-white/70">{name}</span>
+              <span className="text-white/80">{name}</span>
             </nav>
-            
+
             <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-2xl animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-                <div className="mb-4 inline-flex h-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-md px-4 text-xs font-bold tracking-widest text-white ring-1 ring-white/20 shadow-2xl">
+                <div className="mb-4 inline-flex h-8 items-center justify-center rounded-full bg-white/10 px-4 text-xs font-bold tracking-widest text-white ring-1 ring-white/20 backdrop-blur-md shadow-2xl">
                   {products.length} {ar ? "منتج حصري" : "EXCLUSIVE PRODUCTS"}
                 </div>
-                <h1 className="font-heading text-5xl font-black tracking-tight text-white sm:text-7xl lg:text-8xl drop-shadow-2xl">
+                <h1 className="font-heading text-5xl font-black tracking-tight text-white drop-shadow-2xl sm:text-7xl lg:text-8xl">
                   {name}
                 </h1>
               </div>
@@ -87,12 +100,10 @@ export function CategoryView({
         </div>
       </section>
 
-      {/* Sticky Filters Toolbar */}
       <section className="sticky top-[72px] z-40 mx-auto max-w-7xl px-5 py-4 transition-all">
-        <div className="backdrop-blur-2xl bg-ink/70 flex flex-col gap-4 p-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-          
-          <div className="flex items-center gap-3 group">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5 text-fg-dim transition-colors group-hover:bg-brand/10 group-hover:text-brand">
+        <div className="flex flex-col gap-4 rounded-2xl border border-black/8 bg-white/92 p-3 shadow-[0_8px_30px_rgba(17,17,17,0.08)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between">
+          <div className="group flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-black/[0.03] text-fg-dim transition-colors group-hover:bg-brand/10 group-hover:text-brand">
               <ArrowUpDown size={18} />
             </div>
             <label className="flex-1 sm:flex-none">
@@ -100,26 +111,34 @@ export function CategoryView({
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as Sort)}
-                className="w-full min-w-[200px] bg-transparent text-sm font-medium text-fg focus:outline-none focus:ring-0 cursor-pointer appearance-none px-2"
+                className="w-full min-w-[200px] cursor-pointer appearance-none bg-transparent px-2 text-sm font-medium text-fg focus:outline-none focus:ring-0"
               >
-                <option value="featured" className="bg-ink text-fg">{ar ? "ترتيب: المميزة" : "Sort: Featured"}</option>
-                <option value="price-asc" className="bg-ink text-fg">{ar ? "ترتيب: السعر (الأقل للأعلى)" : "Sort: Price (Low to High)"}</option>
-                <option value="price-desc" className="bg-ink text-fg">{ar ? "ترتيب: السعر (الأعلى للأقل)" : "Sort: Price (High to Low)"}</option>
-                <option value="name" className="bg-ink text-fg">{ar ? "ترتيب: أبجدي" : "Sort: Name"}</option>
+                <option value="featured" className="bg-white text-fg">
+                  {ar ? "ترتيب: المميزة" : "Sort: Featured"}
+                </option>
+                <option value="price-asc" className="bg-white text-fg">
+                  {ar ? "ترتيب: السعر (الأقل للأعلى)" : "Sort: Price (Low to High)"}
+                </option>
+                <option value="price-desc" className="bg-white text-fg">
+                  {ar ? "ترتيب: السعر (الأعلى للأقل)" : "Sort: Price (High to Low)"}
+                </option>
+                <option value="name" className="bg-white text-fg">
+                  {ar ? "ترتيب: أبجدي" : "Sort: Name"}
+                </option>
               </select>
             </label>
           </div>
 
-          <div className="hidden h-8 w-px bg-white/10 sm:block" />
+          <div className="hidden h-8 w-px bg-black/8 sm:block" />
 
-          <div className="flex flex-1 items-center gap-4 sm:max-w-md group">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5 text-fg-dim transition-colors group-hover:bg-brand/10 group-hover:text-brand">
+          <div className="group flex flex-1 items-center gap-4 sm:max-w-md">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-black/[0.03] text-fg-dim transition-colors group-hover:bg-brand/10 group-hover:text-brand">
               <SlidersHorizontal size={18} />
             </div>
             <label className="flex flex-1 flex-col gap-1.5 px-2">
               <div className="flex items-center justify-between text-xs font-medium text-fg-muted">
                 <span>{ar ? "أقصى سعر" : "Max price"}</span>
-                <span className="text-brand font-bold bg-brand/10 px-2 py-0.5 rounded-md">
+                <span className="rounded-md bg-brand/10 px-2 py-0.5 font-bold text-brand">
                   {maxPrice === "" ? (ar ? "الكل" : "All") : formatPrice(Number(maxPrice), lang)}
                 </span>
               </div>
@@ -132,29 +151,32 @@ export function CategoryView({
                 onChange={(e) =>
                   setMaxPrice(Number(e.target.value) >= (priceCeiling || 0) ? "" : Number(e.target.value))
                 }
-                className="w-full accent-brand hover:accent-brand/80 cursor-pointer h-1.5 bg-white/10 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(220,38,38,0.8)] transition-all"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-black/10 accent-brand transition-all hover:accent-brand/80 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(220,38,38,0.35)]"
               />
             </label>
           </div>
-
         </div>
       </section>
 
-      {/* Grid */}
-      <section className="mx-auto max-w-7xl px-5 py-12 relative z-10">
+      <section className="relative z-10 mx-auto max-w-7xl px-5 py-12">
         {visible.length === 0 ? (
-          <div className="glass flex flex-col items-center justify-center p-20 text-center rounded-2xl border border-white/5">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-brand mb-4">
+          <div className="glass flex flex-col items-center justify-center rounded-2xl border border-black/5 p-20 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-brand">
               <SlidersHorizontal size={24} />
             </div>
-            <h3 className="text-lg font-bold text-fg">{ar ? "لا توجد منتجات" : "No products found"}</h3>
-            <p className="mt-2 text-sm text-fg-dim max-w-sm">
-              {ar 
+            <h3 className="text-lg font-bold text-fg">
+              {ar ? "لا توجد منتجات" : "No products found"}
+            </h3>
+            <p className="mt-2 max-w-sm text-sm text-fg-dim">
+              {ar
                 ? "حاول تغيير إعدادات الفلترة أو السعر للبحث عن منتجات أخرى."
                 : "Try adjusting your filters or price range to find what you're looking for."}
             </p>
-            <button 
-              onClick={() => { setSort("featured"); setMaxPrice(""); }}
+            <button
+              onClick={() => {
+                setSort("featured");
+                setMaxPrice("");
+              }}
               className="btn btn-secondary mt-6"
             >
               {ar ? "إعادة ضبط الفلاتر" : "Reset Filters"}

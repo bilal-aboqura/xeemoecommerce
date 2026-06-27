@@ -3,6 +3,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
 const BUCKET = "product-images";
+const MAX_UPLOAD_SIZE = 20 * 1024 * 1024;
 
 /**
  * Ensure the storage bucket exists. Creates it if missing.
@@ -53,8 +54,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not an image" }, { status: 400 });
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: "Image too large (max 5MB)" }, { status: 400 });
+  if (file.size > MAX_UPLOAD_SIZE) {
+    return NextResponse.json({ error: "Image too large (max 20MB)" }, { status: 400 });
   }
 
   // Ensure bucket exists before uploading

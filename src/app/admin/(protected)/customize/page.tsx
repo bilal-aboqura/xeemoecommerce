@@ -13,6 +13,17 @@ interface SettingValue {
 
 type Fields = Record<string, SettingValue>;
 
+interface HeroSlideDraft {
+  image: string;
+  title_en: string;
+  title_ar: string;
+  subtitle_en: string;
+  subtitle_ar: string;
+  cta_en: string;
+  cta_ar: string;
+  href: string;
+}
+
 interface ProductOption {
   id: string;
   slug: string;
@@ -21,6 +32,13 @@ interface ProductOption {
   price: number;
   stock: number;
   is_active: boolean;
+}
+
+interface CategoryOption {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_ar: string;
 }
 
 const DEFAULT_HERO_IMAGES = [
@@ -34,12 +52,26 @@ const DEFAULT_HERO_IMAGES = [
   "/images/black-ice-4k.webp",
 ];
 
+const DEFAULT_HERO_SLIDES: HeroSlideDraft[] = [
+  {
+    image: "/images/hs.webp",
+    title_en: "Your car will look showroom-fresh",
+    title_ar: "عربيتك هتبان كأنها لسه نازلة من المعرض",
+    subtitle_en: "The detailing products that car wash pros use - now in your hands.",
+    subtitle_ar: "منتجات التلميع والعناية اللي بيستخدمها أصحاب المغاسل - دلوقتي في إيدك.",
+    cta_en: "See the Best Sellers",
+    cta_ar: "شوف الأكثر مبيعاً",
+    href: "#bestsellers",
+  },
+];
+
 const DEFAULTS: Fields = {
   store_name: { value_en: "Xeemo", value_ar: "اكسيمو" },
   store_tagline: { value_en: "Car Care Chemicals", value_ar: "كيماويات العناية بالسيارات" },
   store_phone: { value_en: "+201150301033", value_ar: "+201150301033" },
   store_email: { value_en: "", value_ar: "" },
   store_facebook: { value_en: "https://www.facebook.com/officialxeemo", value_ar: "https://www.facebook.com/officialxeemo" },
+  hero_slides: { value_en: JSON.stringify(DEFAULT_HERO_SLIDES), value_ar: "" },
   hero_title: { value_en: "Your car will look showroom-fresh", value_ar: "عربيتك هتبان كأنها لسه نازلة من المعرض" },
   hero_subtitle: { value_en: "The detailing products that car wash pros use — now in your hands.", value_ar: "منتجات التلميع والعناية اللي بيستخدمها أصحاب المغاسل — دلوقتي في إيدك." },
   hero_cta: { value_en: "See the Best Sellers", value_ar: "شوف الأكثر مبيعاً" },
@@ -69,7 +101,7 @@ interface SectionDef {
     key: string;
     label: { en: string; ar: string };
     bilingual?: boolean;
-    type?: "number" | "image" | "hero-images";
+    type?: "number" | "image" | "hero-images" | "hero-slides";
   }[];
 }
 
@@ -92,11 +124,7 @@ const SECTIONS: SectionDef[] = [
   {
     title: { en: "Homepage Hero", ar: "القسم الرئيسي" },
     keys: [
-      { key: "hero_title", label: { en: "Hero Title", ar: "العنوان الرئيسي" }, bilingual: true },
-      { key: "hero_subtitle", label: { en: "Hero Subtitle", ar: "العنوان الفرعي" }, bilingual: true },
-      { key: "hero_cta", label: { en: "CTA Button Text", ar: "نص زر الإجراء" }, bilingual: true },
-      { key: "hero_background_image", label: { en: "Hero Background Image", ar: "صورة خلفية الهيرو" }, type: "image" },
-      { key: "hero_images", label: { en: "Hero Product Images", ar: "صور منتجات الهيرو" }, type: "hero-images" },
+      { key: "hero_slides", label: { en: "Hero Carousel Slides", ar: "سلايدر الهيرو" }, type: "hero-slides" },
       { key: "hero_pill_cod", label: { en: "COD Badge Text", ar: "نص شارة الدفع عند الاستلام" }, bilingual: true },
       { key: "hero_pill_returns", label: { en: "Returns Badge Text", ar: "نص شارة الاسترجاع" }, bilingual: true },
       { key: "hero_pill_shipping", label: { en: "Shipping Badge Text", ar: "نص شارة الشحن" }, bilingual: true },
@@ -131,6 +159,7 @@ export default function CustomizePage() {
 
   const [fields, setFields] = useState<Fields>(DEFAULTS);
   const [products, setProducts] = useState<ProductOption[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState<number | null>(null);
 
@@ -138,13 +167,16 @@ export default function CustomizePage() {
     Promise.all([
       fetch("/api/admin/settings").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/admin/products").then((r) => (r.ok ? r.json() : { products: [] })),
+      fetch("/api/admin/categories").then((r) => (r.ok ? r.json() : { categories: [] })),
     ])
-      .then(([settings, productsData]: [
+      .then(([settings, productsData, categoriesData]: [
         { key: string; value_en: string; value_ar: string }[],
         { products?: ProductOption[] },
+        { categories?: CategoryOption[] },
       ]) => {
         setFields((prev) => {
           const next = { ...prev };
+          const hasHeroSlidesSetting = settings.some((row) => row.key === "hero_slides" && row.value_en.trim());
           for (const row of settings) {
             if (row.key in next) {
               next[row.key] = { value_en: row.value_en, value_ar: row.value_ar };
@@ -158,9 +190,27 @@ export default function CustomizePage() {
               value_ar: "",
             };
           }
+          if (!hasHeroSlidesSetting) {
+            next.hero_slides = {
+              value_en: JSON.stringify([
+                {
+                  ...DEFAULT_HERO_SLIDES[0],
+                  image: next.hero_background_image.value_en || DEFAULT_HERO_SLIDES[0].image,
+                  title_en: next.hero_title.value_en || DEFAULT_HERO_SLIDES[0].title_en,
+                  title_ar: next.hero_title.value_ar || DEFAULT_HERO_SLIDES[0].title_ar,
+                  subtitle_en: next.hero_subtitle.value_en || DEFAULT_HERO_SLIDES[0].subtitle_en,
+                  subtitle_ar: next.hero_subtitle.value_ar || DEFAULT_HERO_SLIDES[0].subtitle_ar,
+                  cta_en: next.hero_cta.value_en || DEFAULT_HERO_SLIDES[0].cta_en,
+                  cta_ar: next.hero_cta.value_ar || DEFAULT_HERO_SLIDES[0].cta_ar,
+                },
+              ]),
+              value_ar: "",
+            };
+          }
           return next;
         });
         setProducts(productsData.products ?? []);
+        setCategories(categoriesData.categories ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -256,6 +306,14 @@ export default function CustomizePage() {
                       lang={lang}
                       onChange={(value) => update(key, "value_en", value)}
                     />
+                  ) : type === "hero-slides" ? (
+                    <HeroSlidesEditor
+                      value={fields[key].value_en}
+                      lang={lang}
+                      products={products}
+                      categories={categories}
+                      onChange={(value) => update(key, "value_en", value)}
+                    />
                   ) : key === "order_bump_product_slugs" ? (
                     <ProductMultiPicker
                       value={fields[key].value_en}
@@ -331,6 +389,34 @@ function parseHeroImageUrls(value: string): string[] {
   return [];
 }
 
+function parseHeroSlides(value: string): HeroSlideDraft[] {
+  if (!value.trim()) return DEFAULT_HERO_SLIDES;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      const slides = parsed
+        .map((slide) => {
+          if (!slide || typeof slide !== "object") return null;
+          const record = slide as Record<string, unknown>;
+          return {
+            image: String(record.image ?? "").trim(),
+            title_en: String(record.title_en ?? "").trim(),
+            title_ar: String(record.title_ar ?? "").trim(),
+            subtitle_en: String(record.subtitle_en ?? "").trim(),
+            subtitle_ar: String(record.subtitle_ar ?? "").trim(),
+            cta_en: String(record.cta_en ?? "").trim(),
+            cta_ar: String(record.cta_ar ?? "").trim(),
+            href: String(record.href ?? "").trim(),
+          };
+        })
+        .filter((slide): slide is HeroSlideDraft => Boolean(slide))
+        .slice(0, 8);
+      if (slides.length > 0) return slides;
+    }
+  } catch {}
+  return DEFAULT_HERO_SLIDES;
+}
+
 function HeroImagesEditor({
   value,
   lang,
@@ -396,6 +482,194 @@ function HeroImagesEditor({
           className="rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {ar ? "إضافة صورة" : "Add image"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function HeroSlidesEditor({
+  value,
+  lang,
+  products,
+  categories,
+  onChange,
+}: {
+  value: string;
+  lang: "en" | "ar";
+  products: ProductOption[];
+  categories: CategoryOption[];
+  onChange: (value: string) => void;
+}) {
+  const ar = lang === "ar";
+  const slides = parseHeroSlides(value);
+  const activeProducts = products.filter((product) => product.is_active);
+
+  function commit(nextSlides: HeroSlideDraft[]) {
+    onChange(JSON.stringify(nextSlides.slice(0, 8)));
+  }
+
+  function updateSlide(index: number, patch: Partial<HeroSlideDraft>) {
+    commit(slides.map((slide, slideIndex) => (
+      slideIndex === index ? { ...slide, ...patch } : slide
+    )));
+  }
+
+  function removeSlide(index: number) {
+    if (slides.length <= 1) return;
+    commit(slides.filter((_, slideIndex) => slideIndex !== index));
+  }
+
+  function addSlide() {
+    commit([
+      ...slides,
+      {
+        ...DEFAULT_HERO_SLIDES[0],
+        image: "",
+        title_en: "",
+        title_ar: "",
+        subtitle_en: "",
+        subtitle_ar: "",
+      },
+    ]);
+  }
+
+  return (
+    <div className="space-y-4 rounded-xl border border-border bg-white/60 p-3">
+      {slides.map((slide, index) => (
+        <div key={`${index}-${slide.image || "empty"}`} className="rounded-2xl border border-border bg-white p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-fg">
+              {ar ? `الشريحة ${index + 1}` : `Slide ${index + 1}`}
+            </h3>
+            {slides.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeSlide(index)}
+                className="flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-500/10"
+              >
+                <X size={12} />
+                {ar ? "حذف الشريحة" : "Remove slide"}
+              </button>
+            )}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
+            <ImageUpload
+              value={slide.image}
+              onChange={(nextImage) => updateSlide(index, { image: nextImage })}
+              label={ar ? "صورة الشريحة" : "Slide image"}
+              lang={lang}
+              aspectRatio={16 / 9}
+            />
+
+            <div className="space-y-3">
+              <label className="block">
+                <span className="mb-1 block text-[11px] text-fg-dim/70">
+                  {ar ? "رابط الزر" : "Button link"}
+                </span>
+                <select
+                  value={slide.href}
+                  onChange={(event) => updateSlide(index, { href: event.target.value })}
+                  className={inputCls}
+                >
+                  <option value="#bestsellers">
+                    {ar ? "الأكثر مبيعاً" : "Best sellers section"}
+                  </option>
+                  <optgroup label={ar ? "الأقسام" : "Categories"}>
+                    {categories.map((category) => (
+                      <option key={category.id} value={`/category/${category.slug}`}>
+                        {ar ? category.name_ar : category.name_en}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={ar ? "المنتجات" : "Products"}>
+                    {activeProducts.map((product) => (
+                      <option key={product.id} value={`/product/${product.slug}`}>
+                        {ar ? product.name_ar : product.name_en}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </label>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] text-fg-dim/70">English Title</span>
+                  <input
+                    value={slide.title_en}
+                    onChange={(event) => updateSlide(index, { title_en: event.target.value })}
+                    className={inputCls}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[11px] text-fg-dim/70">العنوان الرئيسي</span>
+                  <input
+                    value={slide.title_ar}
+                    onChange={(event) => updateSlide(index, { title_ar: event.target.value })}
+                    dir="rtl"
+                    className={inputCls}
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] text-fg-dim/70">English Subtitle</span>
+                  <textarea
+                    value={slide.subtitle_en}
+                    onChange={(event) => updateSlide(index, { subtitle_en: event.target.value })}
+                    className={`${inputCls} min-h-24 resize-y`}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[11px] text-fg-dim/70">العنوان الفرعي</span>
+                  <textarea
+                    value={slide.subtitle_ar}
+                    onChange={(event) => updateSlide(index, { subtitle_ar: event.target.value })}
+                    dir="rtl"
+                    className={`${inputCls} min-h-24 resize-y`}
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] text-fg-dim/70">English CTA</span>
+                  <input
+                    value={slide.cta_en}
+                    onChange={(event) => updateSlide(index, { cta_en: event.target.value })}
+                    className={inputCls}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[11px] text-fg-dim/70">نص الزر</span>
+                  <input
+                    value={slide.cta_ar}
+                    onChange={(event) => updateSlide(index, { cta_ar: event.target.value })}
+                    dir="rtl"
+                    className={inputCls}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-fg-dim">
+          {ar
+            ? "كل شريحة تقدر تغير صورتها ونصوصها ورابط الزر من هنا."
+            : "Each slide has its own image, copy, and button link."}
+        </p>
+        <button
+          type="button"
+          onClick={addSlide}
+          disabled={slides.length >= 8}
+          className="rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {ar ? "إضافة شريحة" : "Add slide"}
         </button>
       </div>
     </div>

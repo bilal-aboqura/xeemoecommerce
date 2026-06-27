@@ -37,9 +37,9 @@ export default function AdminBundlesPage() {
       })
       .catch(() => toast.error("Failed to load"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
 
-  function updateBundle(index: number, field: keyof BundleConfig, value: any) {
+  function updateBundle<K extends keyof BundleConfig>(index: number, field: K, value: BundleConfig[K]) {
     setBundles((prev) => prev.map((b, i) => (i === index ? { ...b, [field]: value } : b)));
   }
 
@@ -124,7 +124,7 @@ export default function AdminBundlesPage() {
 
       <div className="mt-6 space-y-6">
         {bundles.length === 0 && (
-          <div className="glass p-12 text-center text-fg-dim">No bundles yet. Click "Add bundle" to create one.</div>
+          <div className="glass p-12 text-center text-fg-dim">No bundles yet. Click &quot;Add bundle&quot; to create one.</div>
         )}
         {bundles.map((bundle, bi) => (
           <div key={bundle.key} className="glass p-6">

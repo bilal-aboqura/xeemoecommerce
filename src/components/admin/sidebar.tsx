@@ -73,13 +73,22 @@ export function AdminSidebar() {
   const ar = lang === "ar";
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-border bg-ink-2/30 p-3 lg:sticky lg:top-[72px] lg:h-[calc(100dvh-72px)] lg:w-56 lg:border-b-0 lg:border-r">
-      {/* Desktop: vertical grouped nav */}
-      <nav className="hidden lg:flex lg:flex-col lg:gap-1">
+    <aside className="w-full shrink-0 lg:sticky lg:top-[96px] lg:w-[280px]">
+      <div className="rounded-2xl border border-border bg-white p-3 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+      <div className="hidden rounded-2xl border border-slate-200 bg-slate-50/80 p-4 lg:block">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-fg-dim">
+          {ar ? "لوحة التحكم" : "Control Center"}
+        </p>
+        <p className="mt-2 text-sm font-medium text-fg">
+          {ar ? "إدارة الطلبات والمنتجات والمحتوى من مكان واحد." : "Manage orders, products, and storefront content from one place."}
+        </p>
+      </div>
+
+      <nav className="hidden lg:mt-4 lg:flex lg:flex-col lg:gap-1.5">
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
-            {gi > 0 && <div className="my-2 border-t border-border" />}
-            <p className="mb-1 px-3 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-fg-muted/50">
+            {gi > 0 && <div className="my-3 border-t border-border" />}
+            <p className="mb-1.5 px-3 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-fg-dim">
               {ar ? group.label.ar : group.label.en}
             </p>
             {group.items.map(({ href, key, Icon }) => {
@@ -92,14 +101,21 @@ export function AdminSidebar() {
                   key={href}
                   href={href}
                   className={cn(
-                    "flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                    "flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition",
                     active
                       ? "bg-brand text-white shadow-sm shadow-brand/20"
-                      : "text-fg-dim hover:bg-white/[0.04] hover:text-fg",
+                      : "text-fg-dim hover:bg-slate-50 hover:text-fg",
                   )}
                 >
-                  <Icon size={16} />
-                  <span>{getNavLabel(key, t.admin, ar)}</span>
+                  <span
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-lg",
+                      active ? "bg-white/14 text-white" : "bg-slate-100 text-fg-muted",
+                    )}
+                  >
+                    <Icon size={16} />
+                  </span>
+                  <span className="truncate">{getNavLabel(key, t.admin, ar)}</span>
                 </Link>
               );
             })}
@@ -107,11 +123,8 @@ export function AdminSidebar() {
         ))}
       </nav>
 
-      {/* Mobile: horizontal scroll with edge shadows */}
       <div className="relative lg:hidden">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-ink-2/30 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-gradient-to-l from-ink-2/30 to-transparent" />
-        <nav className="flex gap-1 overflow-x-auto px-1 scrollbar-none">
+        <nav className="flex gap-2 overflow-x-auto px-0 scrollbar-none">
           {NAV_GROUPS.flatMap((group) => group.items).map(({ href, key, Icon }) => {
             const active =
               href === "/admin"
@@ -122,10 +135,10 @@ export function AdminSidebar() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                  "flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition",
                   active
-                    ? "bg-brand text-white shadow-sm shadow-brand/20"
-                    : "text-fg-dim hover:bg-white/[0.04] hover:text-fg",
+                    ? "border-brand bg-brand text-white shadow-sm shadow-brand/20"
+                    : "border-border bg-white text-fg-dim hover:text-fg",
                 )}
               >
                 <Icon size={16} />
@@ -134,6 +147,7 @@ export function AdminSidebar() {
             );
           })}
         </nav>
+      </div>
       </div>
     </aside>
   );

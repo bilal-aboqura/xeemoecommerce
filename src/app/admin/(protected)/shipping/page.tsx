@@ -1,6 +1,7 @@
 import { adminListShippingRates } from "@/lib/data/admin-crud";
 import { getLang } from "@/lib/i18n/server";
 import { ShippingManager } from "@/components/admin/shipping-manager";
+import { AdminPageHeader } from "@/components/admin/page-header";
 
 export default async function AdminShippingPage() {
   const lang = await getLang();
@@ -9,14 +10,15 @@ export default async function AdminShippingPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-bold text-fg">
-        {ar ? "أسعار الشحن" : "Shipping Rates"}
-      </h1>
-      <p className="mt-1 text-sm text-fg-dim">
-        {ar
-          ? "المحافظة/المدينة = سعر محدد. * =wildcard."
-          : "Governorate/City = exact rate. * = wildcard."}
-      </p>
+      <AdminPageHeader
+        eyebrow={ar ? "الشحن" : "Shipping"}
+        title={ar ? "أسعار الشحن" : "Shipping Rates"}
+        description={
+          ar
+            ? "حدد الأسعار حسب المحافظة والمدينة، مع دعم القيم العامة باستخدام النجمة."
+            : "Set rates by governorate and city, with wildcard support for broader coverage."
+        }
+      />
 
       <ShippingManager rates={rates} lang={lang} />
     </div>
