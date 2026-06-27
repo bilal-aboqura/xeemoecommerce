@@ -19,6 +19,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getLang } from "@/lib/i18n/server";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { FadeIn, FadeInStagger } from "@/components/ui/fade-in";
 
 export default async function Home() {
   const supabase = await getSupabaseServerClient();
@@ -61,11 +62,13 @@ export default async function Home() {
           </Link>
         </div>
         {connected && products.length > 0 ? (
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-4">
+          <FadeInStagger className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-4">
             {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <FadeIn key={p.id}>
+                <ProductCard product={p} />
+              </FadeIn>
             ))}
-          </div>
+          </FadeInStagger>
         ) : (
           <div className="glass mt-8 p-12 text-center text-fg-dim">
             {connected

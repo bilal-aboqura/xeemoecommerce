@@ -7,6 +7,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { cn } from "@/lib/utils";
 import type { HeroOverrides, HeroSlide } from "@/lib/data/catalog";
+import { FadeIn, FadeInStagger } from "@/components/ui/fade-in";
 
 const ARABIC_RE = /[\u0600-\u06ff]/;
 const MOJIBAKE_RE = /[ØÙÛÃÂ]/;
@@ -80,7 +81,7 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
 
   return (
     <section data-home-hero className="relative isolate overflow-hidden bg-ink">
-      <div className="relative min-h-[calc(100svh-72px)] sm:min-h-[680px] lg:min-h-[760px]">
+      <div className="relative min-h-[calc(100svh-72px)] sm:min-h-[680px] lg:min-h-[calc(100svh-72px)]">
         {slides.map((slide, index) => {
           const isActive = index === activeIndex;
           return (
@@ -117,32 +118,36 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
 
         <div
           className={cn(
-            "relative z-10 mx-auto flex min-h-[calc(100svh-72px)] max-w-7xl items-center px-5 pb-24 pt-10 sm:min-h-[680px] sm:pb-32 sm:pt-20 lg:min-h-[760px] lg:py-28",
+            "relative z-10 mx-auto flex min-h-[calc(100svh-72px)] max-w-7xl items-center px-5 pb-24 pt-10 sm:min-h-[680px] sm:pb-32 sm:pt-20 lg:min-h-[calc(100svh-72px)] lg:py-28",
             ar ? "justify-start text-right" : "justify-start text-left",
           )}
         >
-          <div className="flex max-w-[46rem] flex-col items-start">
-            <h1
-              className={cn(
-                "max-w-4xl text-white [text-wrap:balance]",
-                ar
-                  ? "font-sans text-[2.6rem] font-extrabold leading-[1.24] sm:text-6xl sm:leading-[1.18] lg:text-7xl lg:leading-[1.16]"
-                  : "font-heading text-5xl font-bold uppercase leading-[0.98] sm:text-7xl lg:text-8xl",
-              )}
-            >
-              {title}
-            </h1>
+          <FadeInStagger className="flex max-w-[46rem] flex-col items-start">
+            <FadeIn>
+              <h1
+                className={cn(
+                  "max-w-4xl text-white [text-wrap:balance]",
+                  ar
+                    ? "font-sans text-[2.6rem] font-extrabold leading-[1.24] sm:text-6xl sm:leading-[1.18] lg:text-7xl lg:leading-[1.16]"
+                    : "font-heading text-5xl font-bold uppercase leading-[0.98] sm:text-7xl lg:text-8xl",
+                )}
+              >
+                {title}
+              </h1>
+            </FadeIn>
 
-            <p
-              className={cn(
-                "mt-5 max-w-2xl text-base font-medium leading-8 text-white/82 sm:text-lg lg:text-xl lg:leading-9",
-                ar && "max-w-[40rem]",
-              )}
-            >
-              {subtitle}
-            </p>
+            <FadeIn>
+              <p
+                className={cn(
+                  "mt-5 max-w-2xl text-base font-medium leading-8 text-white/82 sm:text-lg lg:text-xl lg:leading-9",
+                  ar && "max-w-[40rem]",
+                )}
+              >
+                {subtitle}
+              </p>
+            </FadeIn>
 
-            <div className={cn("mt-8 flex flex-wrap items-center gap-3", ar && "justify-start")}>
+            <FadeIn className={cn("mt-8 flex flex-wrap items-center gap-3", ar && "justify-start")}>
               <Link
                 href={activeSlide.href || "#bestsellers"}
                 className={cn(
@@ -155,8 +160,8 @@ export function HomeHero({ overrides }: { overrides?: HeroOverrides }) {
                 </span>
                 {cta}
               </Link>
-            </div>
-          </div>
+            </FadeIn>
+          </FadeInStagger>
         </div>
 
         {slideCount > 1 && (

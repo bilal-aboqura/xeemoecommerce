@@ -31,6 +31,7 @@ import { useLang } from "@/components/language/provider";
 import { cn, formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
 import type { ResolvedBundle, SocialStats, HeroOverrides } from "@/lib/data/catalog";
+import { FadeIn, FadeInStagger } from "@/components/ui/fade-in";
 
 /* ─── Constants ───────────────────────────────────────────────────────────── */
 
@@ -352,20 +353,22 @@ export function TrustGuaranteeSection() {
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-20">
-      <h2 className="text-center font-heading text-2xl font-bold text-fg sm:text-3xl">
-        {t.home.trustTitle}
-      </h2>
-      <div className="mt-10 grid gap-5 sm:grid-cols-3">
+      <FadeIn>
+        <h2 className="text-center font-heading text-2xl font-bold text-fg sm:text-3xl">
+          {t.home.trustTitle}
+        </h2>
+      </FadeIn>
+      <FadeInStagger className="mt-10 grid gap-5 sm:grid-cols-3">
         {pillars.map(({ Icon, title, desc, color }) => (
-          <div key={title} className="glass p-6 text-center">
+          <FadeIn key={title} className="glass p-6 text-center">
             <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ${color}`}>
               <Icon size={24} />
             </div>
             <h3 className="mt-4 text-base font-semibold text-fg">{title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-fg-dim">{desc}</p>
-          </div>
+          </FadeIn>
         ))}
-      </div>
+      </FadeInStagger>
     </section>
   );
 }
@@ -384,15 +387,15 @@ export function WhyXeemoSection() {
   return (
     <section className="border-y border-border bg-white/[0.01] py-20">
       <div className="mx-auto max-w-7xl px-5">
-        <div className="text-center">
+        <FadeIn className="text-center">
           <h2 className="font-heading text-2xl font-bold text-fg sm:text-3xl">
             {t.home.whyTitle}
           </h2>
           <p className="mt-2 text-sm text-fg-dim">{t.home.whySub}</p>
-        </div>
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+        </FadeIn>
+        <FadeInStagger className="mt-10 grid gap-6 sm:grid-cols-3">
           {reasons.map(({ Icon, title, desc }) => (
-            <div key={title} className="flex gap-4">
+            <FadeIn key={title} className="flex gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
                 <Icon size={22} />
               </div>
@@ -400,9 +403,9 @@ export function WhyXeemoSection() {
                 <h3 className="text-sm font-semibold text-fg">{title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-fg-dim">{desc}</p>
               </div>
-            </div>
+            </FadeIn>
           ))}
-        </div>
+        </FadeInStagger>
       </div>
     </section>
   );
@@ -440,13 +443,13 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-20">
-      <div className="text-center">
+      <FadeIn className="text-center">
         <h2 className="font-heading text-2xl font-bold text-fg sm:text-3xl">
           {t.home.bundleTitle}
         </h2>
         <p className="mt-2 text-sm text-fg-dim">{t.home.bundleSub}</p>
-      </div>
-      <div className="mt-10 grid gap-5 sm:grid-cols-3">
+      </FadeIn>
+      <FadeInStagger className="mt-10 grid gap-5 sm:grid-cols-3">
         {resolved
           ? bundles.map((b) => {
               const title = ar ? b.title_ar : b.title_en;
@@ -455,7 +458,7 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
               const image = b.image || b.products[0]?.images?.[0] || "/images/placeholder.webp";
               const isAdded = addedKey === b.key;
               return (
-                <div key={b.key} className="glass group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5">
+                <FadeIn key={b.key} className="glass group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5">
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface">
                     <Image
                       src={image}
@@ -501,7 +504,7 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
                       )}
                     </button>
                   </div>
-                </div>
+                </FadeIn>
               );
             })
           : fallbackBundles.map((b) => {
@@ -513,7 +516,7 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
               const info = bundleDetails[b.key];
               const saving = b.originalPrice - b.bundlePrice;
               return (
-                <div key={b.key} className="glass group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5">
+                <FadeIn key={b.key} className="glass group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5">
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface">
                     <Image
                       src={b.image}
@@ -551,10 +554,10 @@ export function BundleOffersSection({ bundles }: { bundles?: ResolvedBundle[] })
                       <ArrowRight size={14} />
                     </Link>
                   </div>
-                </div>
+                </FadeIn>
               );
             })}
-      </div>
+      </FadeInStagger>
     </section>
   );
 }
@@ -601,7 +604,7 @@ export function FinalCTASection() {
   return (
     <section className="relative overflow-hidden border-t border-border">
       <div className="pointer-events-none absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-brand/[0.06] blur-[100px]" />
-      <div className="relative mx-auto max-w-3xl px-5 py-20 text-center">
+      <FadeIn className="relative mx-auto max-w-3xl px-5 py-20 text-center">
         <h2 className="font-heading text-3xl font-bold text-fg sm:text-4xl">
           {t.home.finalCtaTitle}
         </h2>
@@ -612,7 +615,7 @@ export function FinalCTASection() {
           {t.home.finalCtaBtn}
           <ArrowRight size={18} />
         </Link>
-      </div>
+      </FadeIn>
     </section>
   );
 }
@@ -683,13 +686,13 @@ export function Testimonials({ stats }: { stats?: SocialStats }) {
   return (
     <section className="mx-auto max-w-7xl px-5 py-20">
       {/* Stats bar — editable via admin settings (keys: stat_customers, stat_carwashes, stat_rating) */}
-      <div className="mb-10 flex flex-wrap justify-center gap-6 sm:gap-10">
-        <StatItem icon={<Users size={18} />} value={s.customers} label={ar ? "عميل" : "Customers"} />
-        <StatItem icon={<Car size={18} />} value={s.carWashes} label={ar ? "مغسلة" : "Car washes"} />
-        <StatItem icon={<Star size={18} />} value={s.rating} label={ar ? "تقييم" : "Rating"} />
-      </div>
+      <FadeInStagger className="mb-10 flex flex-wrap justify-center gap-6 sm:gap-10">
+        <FadeIn><StatItem icon={<Users size={18} />} value={s.customers} label={ar ? "عميل" : "Customers"} /></FadeIn>
+        <FadeIn><StatItem icon={<Car size={18} />} value={s.carWashes} label={ar ? "مغسلة" : "Car washes"} /></FadeIn>
+        <FadeIn><StatItem icon={<Star size={18} />} value={s.rating} label={ar ? "تقييم" : "Rating"} /></FadeIn>
+      </FadeInStagger>
 
-      <div className="flex items-end justify-between gap-4">
+      <FadeIn className="flex items-end justify-between gap-4">
         <div>
           <h2 className="font-heading text-2xl font-bold text-fg sm:text-3xl">
             {t.home.testimonials}
@@ -715,47 +718,49 @@ export function Testimonials({ stats }: { stats?: SocialStats }) {
             {ar ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </button>
         </div>
-      </div>
+      </FadeIn>
 
-      <div
-        ref={scrollRef}
-        className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 scrollbar-none"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {TESTIMONIALS.map((t, i) => (
-          <div
-            key={i}
-            className="group w-[280px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-ink transition-all duration-500 hover:-translate-y-1 hover:border-brand/40 hover:shadow-2xl hover:shadow-black/50 sm:w-[320px]"
-          >
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/60 sm:aspect-[4/5]">
-              {/* Blurred dynamic backdrop */}
-              <div className="absolute inset-0 z-0 opacity-40 blur-2xl transition-opacity duration-500 group-hover:opacity-60">
-                <Image src={t.src} alt="" fill sizes="100px" className="object-cover" />
+      <FadeIn>
+        <div
+          ref={scrollRef}
+          className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 scrollbar-none"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {TESTIMONIALS.map((t, i) => (
+            <div
+              key={i}
+              className="group w-[280px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-ink transition-all duration-500 hover:-translate-y-1 hover:border-brand/40 hover:shadow-2xl hover:shadow-black/50 sm:w-[320px]"
+            >
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/60 sm:aspect-[4/5]">
+                {/* Blurred dynamic backdrop */}
+                <div className="absolute inset-0 z-0 opacity-40 blur-2xl transition-opacity duration-500 group-hover:opacity-60">
+                  <Image src={t.src} alt="" fill sizes="100px" className="object-cover" />
+                </div>
+                
+                <Image
+                  src={t.src}
+                  alt={`${t.name[lang]} — ${t.city[lang]}`}
+                  fill
+                  sizes="(max-width: 640px) 280px, 320px"
+                  className="relative z-10 object-contain p-3 transition-transform duration-500 group-hover:scale-[1.02]"
+                />
               </div>
               
-              <Image
-                src={t.src}
-                alt={`${t.name[lang]} — ${t.city[lang]}`}
-                fill
-                sizes="(max-width: 640px) 280px, 320px"
-                className="relative z-10 object-contain p-3 transition-transform duration-500 group-hover:scale-[1.02]"
-              />
-            </div>
-            
-            <div className="relative z-20 border-t border-white/[0.04] bg-surface/80 px-5 py-4 backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
-                  <Quote size={14} />
-                </div>
-                <div className="min-w-0">
-                  <span className="block text-sm font-bold text-fg">{t.name[lang]}</span>
-                  <span className="block text-[11px] font-medium text-fg-dim">{t.city[lang]}</span>
+              <div className="relative z-20 border-t border-white/[0.04] bg-surface/80 px-5 py-4 backdrop-blur-xl">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+                    <Quote size={14} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="block text-sm font-bold text-fg">{t.name[lang]}</span>
+                    <span className="block text-[11px] font-medium text-fg-dim">{t.city[lang]}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </FadeIn>
     </section>
   );
 }
