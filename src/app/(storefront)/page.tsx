@@ -1,94 +1,36 @@
-import { HomeHero } from "@/components/storefront/home-hero-carousel";
-import { CategoryGrid } from "@/components/storefront/category-grid";
-import {
-  TrustGuaranteeSection,
-  Testimonials,
-  WhyXeemoSection,
-  BundleOffersSection,
-} from "@/components/storefront/home-hero";
-import { ProductCard } from "@/components/storefront/product-card";
-import {
-  getAllCategories,
-  getFeaturedProducts,
-  resolveBundles,
-  getSocialStats,
-  getHeroOverrides,
-} from "@/lib/data/catalog";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getLang } from "@/lib/i18n/server";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { FadeIn, FadeInStagger } from "@/components/ui/fade-in";
+import { getLang } from "@/lib/i18n/server";
 
 export default async function Home() {
-  const supabase = await getSupabaseServerClient();
-  const [products, bundles, stats, heroOverrides, categories] = await Promise.all([
-    getFeaturedProducts(8),
-    resolveBundles(),
-    getSocialStats(),
-    getHeroOverrides(),
-    getAllCategories(),
-  ]);
-  const connected = Boolean(supabase);
   const lang = await getLang();
   const ar = lang === "ar";
 
   return (
-    <>
-      {/* 1. Hero — texts editable from admin/customize */}
-      <HomeHero overrides={heroOverrides} />
-
-      {/* 2. Categories */}
-      <CategoryGrid categories={categories} />
-
-      {/* 3. Best Sellers (limited to top 8) */}
-      <section id="bestsellers" className="mx-auto max-w-7xl px-5 pb-20">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-heading text-2xl font-bold text-fg sm:text-3xl">
-              {ar ? "الأكثر مبيعاً" : "Best Sellers"}
-            </h2>
-            <p className="mt-1 text-sm text-fg-dim">
-              {ar ? "المنتجات اللي عملاؤنا بيرجعوا يشتروها تاني" : "What our customers keep coming back for"}
-            </p>
+    <section className="relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.16),transparent_60%)]" />
+      <div className="mx-auto flex min-h-[calc(100vh-12rem)] max-w-4xl items-center px-5 py-24">
+        <div className="glass relative w-full rounded-[2rem] border border-white/10 p-8 text-center sm:p-12">
+          <span className="inline-flex rounded-full border border-brand/30 bg-brand/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-brand">
+            {ar ? "قريباً" : "Coming Soon"}
+          </span>
+          <h1 className="mt-6 font-heading text-4xl font-bold text-fg sm:text-5xl">
+            {ar ? "الموقع حالياً تحت الإنشاء" : "The storefront is currently under construction"}
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-fg-muted sm:text-lg">
+            {ar
+              ? "نعمل الآن على تجهيز تجربة تسوق أفضل. لوحة الإدارة ما زالت تعمل بشكل طبيعي، وسنعود قريباً بالواجهة الجديدة."
+              : "We are preparing a better shopping experience. The admin panel is still working normally, and the new storefront will be back soon."}
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/admin" className="btn btn-primary px-6 py-3">
+              {ar ? "فتح لوحة الإدارة" : "Open Admin Panel"}
+            </Link>
+            <Link href="/contact" className="btn btn-secondary px-6 py-3">
+              {ar ? "تواصل معنا" : "Contact Us"}
+            </Link>
           </div>
-          <Link
-            href="/category/carcare"
-            className="hidden items-center gap-1.5 text-sm font-medium text-brand transition hover:underline sm:flex"
-          >
-            {ar ? "عرض الكل" : "View all"}
-            <ArrowRight size={14} />
-          </Link>
         </div>
-        {connected && products.length > 0 ? (
-          <FadeInStagger className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-4">
-            {products.map((p) => (
-              <FadeIn key={p.id}>
-                <ProductCard product={p} />
-              </FadeIn>
-            ))}
-          </FadeInStagger>
-        ) : (
-          <div className="glass mt-8 p-12 text-center text-fg-dim">
-            {connected
-              ? (ar ? "لا توجد منتجات بعد." : "No products yet.")
-              : (ar ? "اربط Supabase لعرض المنتجات." : "Connect Supabase to load products.")}
-          </div>
-        )}
-      </section>
-
-      {/* 4. Trust & Guarantee */}
-      <TrustGuaranteeSection />
-
-      {/* 5. Social Proof / Testimonials (stats loaded from DB settings) */}
-      <Testimonials stats={stats} />
-
-      {/* 6. Why Xeemo — differentiators */}
-      <WhyXeemoSection />
-
-      {/* 7. Bundle Offers (with real products from DB) */}
-      <BundleOffersSection bundles={bundles} />
-
-    </>
+      </div>
+    </section>
   );
 }
