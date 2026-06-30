@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getLang } from "@/lib/i18n/server";
 
 export default async function Home() {
@@ -21,14 +20,6 @@ export default async function Home() {
               ? "نعمل الآن على تجهيز تجربة تسوق أفضل. لوحة الإدارة ما زالت تعمل بشكل طبيعي، وسنعود قريباً بالواجهة الجديدة."
               : "We are preparing a better shopping experience. The admin panel is still working normally, and the new storefront will be back soon."}
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/admin" className="btn btn-primary px-6 py-3">
-              {ar ? "فتح لوحة الإدارة" : "Open Admin Panel"}
-            </Link>
-            <Link href="/contact" className="btn btn-secondary px-6 py-3">
-              {ar ? "تواصل معنا" : "Contact Us"}
-            </Link>
-          </div>
         </div>
       </div>
     </section>

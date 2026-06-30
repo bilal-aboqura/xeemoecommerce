@@ -14,10 +14,11 @@ export async function proxy(request: NextRequest) {
   const response = await updateSession(request);
 
   const { pathname } = request.nextUrl;
+  const isAdminArea = pathname.startsWith("/admin");
+  const isApiRoute = pathname.startsWith("/api");
 
   // Optimistic admin guard: anonymous visitors hitting /admin/* are sent to
   // /admin/login. The authoritative authz check lives in the admin layout.
-  const isAdminArea = pathname.startsWith("/admin");
   const isAdminLogin = pathname === "/admin/login";
   if (isAdminArea && !isAdminLogin) {
     // Session cookies are refreshed above; presence of sb-* auth cookie is a
@@ -31,6 +32,13 @@ export async function proxy(request: NextRequest) {
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
+  }
+
+  if (!isAdminArea && !isApiRoute && pathname !== "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   return response;
