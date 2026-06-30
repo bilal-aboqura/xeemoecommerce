@@ -598,28 +598,6 @@ export function FAQSection() {
 
 /* ─── Final CTA ───────────────────────────────────────────────────────────── */
 
-export function FinalCTASection() {
-  const { t } = useLang();
-
-  return (
-    <section className="relative overflow-hidden border-t border-border">
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-brand/[0.06] blur-[100px]" />
-      <FadeIn className="relative mx-auto max-w-3xl px-5 py-20 text-center">
-        <h2 className="font-heading text-3xl font-bold text-fg sm:text-4xl">
-          {t.home.finalCtaTitle}
-        </h2>
-        <p className="mt-4 text-base leading-relaxed text-fg-muted">
-          {t.home.finalCtaSub}
-        </p>
-        <Link href="#bestsellers" className="btn btn-primary mt-8 gap-2 px-8 py-3 text-base">
-          {t.home.finalCtaBtn}
-          <ArrowRight size={18} />
-        </Link>
-      </FadeIn>
-    </section>
-  );
-}
-
 /* ─── Category Grid (kept for navbar/other pages) ─────────────────────────── */
 
 export function CategoryGrid() {

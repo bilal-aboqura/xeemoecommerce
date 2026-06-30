@@ -5,6 +5,38 @@ import Image from "next/image";
 import { MessageCircle, ExternalLink, MapPin, Phone, Mail } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { NewsletterForm } from "@/components/storefront/newsletter-form";
+import { cn } from "@/lib/utils";
+
+const paymentLogos = [
+  {
+    src: "/payment-methods/visa.webp",
+    alt: "Visa",
+    width: 92,
+    height: 30,
+    className: "h-6 w-auto",
+  },
+  {
+    src: "/payment-methods/mastercard.png",
+    alt: "Mastercard",
+    width: 92,
+    height: 56,
+    className: "h-8 w-auto",
+  },
+  {
+    src: "/payment-methods/vodafone-cash.png",
+    alt: "Vodafone Cash",
+    width: 110,
+    height: 40,
+    className: "h-11 w-auto",
+  },
+  {
+    src: "/payment-methods/instapay.png",
+    alt: "InstaPay",
+    width: 94,
+    height: 40,
+    className: "h-11 w-auto",
+  },
+] as const;
 
 export function Footer() {
   const { t } = useLang();
@@ -63,6 +95,26 @@ export function Footer() {
 
         <div className="mt-8">
           <NewsletterForm />
+        </div>
+
+        <div className="mt-8 border-t border-white/10 pt-5">
+          <p className="text-sm font-semibold text-white">{t.footer.paymentMethods}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {paymentLogos.map((logo) => (
+              <div
+                key={logo.alt}
+                className="flex h-14 min-w-28 items-center justify-center rounded-2xl border border-white/10 bg-white px-4"
+              >
+                <Image
+                  src={logo.src}
+                  alt={logo.alt}
+                  width={logo.width}
+                  height={logo.height}
+                  className={cn("w-auto object-contain", logo.className)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-8 border-t border-white/10 pt-5 text-center text-xs text-white/55 sm:flex sm:items-center sm:justify-between sm:text-start">

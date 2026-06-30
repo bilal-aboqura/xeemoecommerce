@@ -5,7 +5,6 @@ import {
   Testimonials,
   WhyXeemoSection,
   BundleOffersSection,
-  FinalCTASection,
 } from "@/components/storefront/home-hero";
 import { ProductCard } from "@/components/storefront/product-card";
 import {
@@ -90,8 +89,6 @@ export default async function Home() {
       {/* 7. Bundle Offers (with real products from DB) */}
       <BundleOffersSection bundles={bundles} />
 
-      {/* 9. Final CTA */}
-      <FinalCTASection />
     </>
   );
 }
