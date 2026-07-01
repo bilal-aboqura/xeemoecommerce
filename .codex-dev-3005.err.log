@@ -1,0 +1,8 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3001
+- PID:          24660
+- Dir:          D:\XemoMainWebSite\xeemo-ecom
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 24660 /F to stop it.

@@ -2,7 +2,6 @@ import { CategoryGrid } from "@/components/storefront/category-grid";
 import {
   BundleOffersSection,
   FAQSection,
-  ProblemSection,
   Testimonials,
   TrustGuaranteeSection,
   WhyXeemoSection,
@@ -62,8 +61,6 @@ export default async function Home() {
           </div>
         )}
       </section>
-
-      <ProblemSection />
       <TrustGuaranteeSection />
       <WhyXeemoSection />
       <BundleOffersSection bundles={bundles} />

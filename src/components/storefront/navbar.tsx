@@ -28,6 +28,7 @@ const PRODUCT_LINKS = [
 export function Navbar() {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-ink/70 backdrop-blur-xl">
@@ -55,18 +56,37 @@ export function Navbar() {
             {t.nav.home}
           </Link>
           
-          {/* Products dropdown */}
-          <div className="group relative">
-            <button className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition hover:bg-white/[0.04] hover:text-fg">
+          <div
+            className="relative"
+            onMouseEnter={() => setProductsOpen(true)}
+            onMouseLeave={() => setProductsOpen(false)}
+          >
+            <button
+              type="button"
+              aria-expanded={productsOpen}
+              aria-haspopup="menu"
+              onClick={() => setProductsOpen((value) => !value)}
+              className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition hover:bg-white/[0.04] hover:text-fg"
+            >
               {t.nav.products}
-              <ChevronDown size={14} className="opacity-50 transition group-hover:opacity-100" />
+              <ChevronDown
+                size={14}
+                className={`transition ${productsOpen ? "rotate-180 opacity-100" : "opacity-50"}`}
+              />
             </button>
-            <div className="invisible absolute left-0 top-full w-64 translate-y-1 pt-2 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+            <div
+              className={`absolute left-0 top-full w-64 pt-2 transition-all duration-200 ${
+                productsOpen
+                  ? "visible translate-y-0 opacity-100"
+                  : "invisible translate-y-1 opacity-0"
+              }`}
+            >
               <div className="glass-elevated p-2">
                 {PRODUCT_LINKS.map(({ href, key, Icon }) => (
                   <Link
                     key={href}
                     href={href}
+                    onClick={() => setProductsOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-fg-muted transition hover:bg-white/[0.06] hover:text-fg"
                   >
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04]">
