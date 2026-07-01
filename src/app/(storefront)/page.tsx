@@ -1,27 +1,74 @@
+import { CategoryGrid } from "@/components/storefront/category-grid";
+import {
+  BundleOffersSection,
+  FAQSection,
+  ProblemSection,
+  Testimonials,
+  TrustGuaranteeSection,
+  WhyXeemoSection,
+} from "@/components/storefront/home-hero";
+import { HomeHero } from "@/components/storefront/home-hero-carousel";
+import { ProductCard } from "@/components/storefront/product-card";
+import {
+  getAllCategories,
+  getFeaturedProducts,
+  getHeroOverrides,
+  getSocialStats,
+  resolveBundles,
+} from "@/lib/data/catalog";
 import { getLang } from "@/lib/i18n/server";
 
 export default async function Home() {
-  const lang = await getLang();
+  const [lang, categories, featuredProducts, heroOverrides, bundles, stats] =
+    await Promise.all([
+      getLang(),
+      getAllCategories(),
+      getFeaturedProducts(8),
+      getHeroOverrides(),
+      resolveBundles(),
+      getSocialStats(),
+    ]);
+
   const ar = lang === "ar";
 
   return (
-    <section className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.16),transparent_60%)]" />
-      <div className="mx-auto flex min-h-[calc(100vh-12rem)] max-w-4xl items-center px-5 py-24">
-        <div className="glass relative w-full rounded-[2rem] border border-white/10 p-8 text-center sm:p-12">
-          <span className="inline-flex rounded-full border border-brand/30 bg-brand/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-brand">
-            {ar ? "قريباً" : "Coming Soon"}
-          </span>
-          <h1 className="mt-6 font-heading text-4xl font-bold text-fg sm:text-5xl">
-            {ar ? "الموقع حالياً تحت الإنشاء" : "The storefront is currently under construction"}
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-fg-muted sm:text-lg">
+    <>
+      <HomeHero overrides={heroOverrides} />
+      <CategoryGrid categories={categories} />
+
+      <section id="bestsellers" className="mx-auto max-w-7xl px-5 py-20">
+        <div className="max-w-2xl">
+          <h2 className="font-heading text-2xl font-bold text-fg sm:text-3xl">
+            {ar ? "الاكثر مبيعا" : "Best Sellers"}
+          </h2>
+          <p className="mt-1 text-sm text-fg-dim">
             {ar
-              ? "نعمل الآن على تجهيز تجربة تسوق أفضل. لوحة الإدارة ما زالت تعمل بشكل طبيعي، وسنعود قريباً بالواجهة الجديدة."
-              : "We are preparing a better shopping experience. The admin panel is still working normally, and the new storefront will be back soon."}
+              ? "المنتجات اللي عملاؤنا بيرجعوا يطلبوها مرة بعد مرة"
+              : "The products customers keep coming back for."}
           </p>
         </div>
-      </div>
-    </section>
+
+        {featuredProducts.length > 0 ? (
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="glass mt-8 rounded-3xl p-8 text-center text-sm text-fg-dim">
+            {ar
+              ? "المنتجات ستظهر هنا بمجرد إضافة الكتالوج."
+              : "Featured products will appear here once the catalog is available."}
+          </div>
+        )}
+      </section>
+
+      <ProblemSection />
+      <TrustGuaranteeSection />
+      <WhyXeemoSection />
+      <BundleOffersSection bundles={bundles} />
+      <Testimonials stats={stats} />
+      <FAQSection />
+    </>
   );
 }
