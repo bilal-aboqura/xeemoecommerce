@@ -82,7 +82,6 @@ export function Footer() {
           <FooterColumn title={t.footer.legal}>
             <FooterLink href="/terms-and-conditions">{t.footer.terms}</FooterLink>
             <FooterLink href="/return-and-exchange-policy">{t.footer.returns}</FooterLink>
-            <FooterLink href="/about">{t.nav.about}</FooterLink>
             <FooterLink href="/contact">{t.nav.contact}</FooterLink>
           </FooterColumn>
 

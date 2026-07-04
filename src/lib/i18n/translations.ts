@@ -8,7 +8,6 @@ export const ui = {
     tagline: "Car Care Chemicals",
     nav: {
       home: "Home",
-      about: "About Xeemo",
       products: "Products",
       carcare: "Car Care",
       motocare: "Moto Care",
@@ -165,7 +164,6 @@ export const ui = {
     tagline: "كيماويات العناية بالسيارات",
     nav: {
       home: "الرئيسية",
-      about: "عن اكسيمو",
       products: "المنتجات",
       carcare: "عناية السيارات",
       motocare: "عناية الموتوسيكلات",

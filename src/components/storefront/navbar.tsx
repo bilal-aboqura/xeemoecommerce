@@ -99,9 +99,6 @@ export function Navbar() {
             </div>
           </div>
 
-          <Link href="/about" className="rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition hover:bg-white/[0.04] hover:text-fg">
-            {t.nav.about}
-          </Link>
           <Link href="/contact" className="rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition hover:bg-white/[0.04] hover:text-fg">
             {t.nav.contact}
           </Link>
@@ -159,9 +156,6 @@ export function Navbar() {
                 </div>
               </MobileLink>
             ))}
-            <MobileLink href="/about" onClick={() => setOpen(false)}>
-              {t.nav.about}
-            </MobileLink>
             <MobileLink href="/contact" onClick={() => setOpen(false)}>
               {t.nav.contact}
             </MobileLink>
