@@ -1,35 +1,14 @@
 import type { Metadata } from "next";
-import { Cairo, Oswald, Bebas_Neue, Roboto } from "next/font/google";
+import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import Script from "next/script";
 import { getLang } from "@/lib/i18n/server";
 
-const cairo = Cairo({
+const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  variable: "--font-cairo",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
-});
-
-const oswald = Oswald({
-  subsets: ["latin"],
-  variable: "--font-oswald",
+  variable: "--font-ibm-plex-sans-arabic",
   weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const bebas = Bebas_Neue({
-  subsets: ["latin"],
-  variable: "--font-bebas",
-  weight: "400",
-  display: "swap",
-});
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  variable: "--font-roboto",
-  weight: ["400", "500", "700"],
   display: "swap",
 });
 
@@ -93,7 +72,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${cairo.variable} ${oswald.variable} ${bebas.variable} ${roboto.variable} h-full antialiased scroll-smooth`}
+      className={`${ibmPlexSansArabic.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col">
         <Script id="meta-pixel" strategy="afterInteractive">

@@ -32,10 +32,10 @@
   --color-fg-dim: #707070;
 
   /* ── Fonts ─────────────────────────────────────────────── */
-  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-heading: var(--font-oswald), var(--font-cairo), sans-serif;
-  --font-display: var(--font-bebas), var(--font-oswald), sans-serif;
-  --font-body-alt: var(--font-roboto), var(--font-cairo), sans-serif;
+  --font-sans: var(--font-ibm-plex-sans-arabic), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-ibm-plex-sans-arabic), sans-serif;
+  --font-display: var(--font-ibm-plex-sans-arabic), sans-serif;
+  --font-body-alt: var(--font-ibm-plex-sans-arabic), sans-serif;
 
   /* ── Radii ─────────────────────────────────────────────── */
   --radius-glass: 16px;
@@ -80,7 +80,7 @@ body {
 }
 
 html[dir="rtl"] body {
-  font-family: var(--font-cairo), sans-serif;
+  font-family: var(--font-ibm-plex-sans-arabic), sans-serif;
   font-weight: 500;
 }
 
@@ -89,7 +89,7 @@ html[dir="rtl"] .font-heading,
 html[dir="rtl"] h1,
 html[dir="rtl"] h2,
 html[dir="rtl"] h3 {
-  font-family: var(--font-cairo), sans-serif;
+  font-family: var(--font-ibm-plex-sans-arabic), sans-serif;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
@@ -105,11 +105,11 @@ html[dir="rtl"] .font-medium {
   font-weight: 600;
 }
 html[dir="rtl"] .btn {
-  font-family: var(--font-cairo), sans-serif;
+  font-family: var(--font-ibm-plex-sans-arabic), sans-serif;
   font-weight: 700;
 }
 html[dir="rtl"] .pill {
-  font-family: var(--font-cairo), sans-serif;
+  font-family: var(--font-ibm-plex-sans-arabic), sans-serif;
   font-weight: 600;
 }
 
