@@ -332,18 +332,21 @@ export function TrustGuaranteeSection() {
 
   const pillars = [
     {
+      id: "return",
       Icon: RotateCcw,
       title: t.home.trustReturn,
       desc: t.home.trustReturnDesc,
       color: "bg-brand/10 text-brand",
     },
     {
+      id: "cash-on-delivery",
       Icon: Banknote,
       title: t.home.trustCod,
       desc: t.home.trustCodDesc,
       color: "bg-emerald/10 text-emerald",
     },
     {
+      id: "made-in-egypt",
       Icon: Factory,
       title: t.home.trustLocal,
       desc: t.home.trustLocalDesc,
@@ -359,8 +362,8 @@ export function TrustGuaranteeSection() {
         </h2>
       </FadeIn>
       <FadeInStagger className="mt-10 grid gap-5 sm:grid-cols-3">
-        {pillars.map(({ Icon, title, desc, color }) => (
-          <FadeIn key={title} className="glass p-6 text-center">
+        {pillars.map(({ id, Icon, title, desc, color }) => (
+          <FadeIn key={id} className="glass p-6 text-center">
             <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ${color}`}>
               <Icon size={24} />
             </div>
