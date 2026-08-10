@@ -1,7 +1,8 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { createOrder } from "@/lib/data/orders";
+import { createOrder, getOrderByNumber } from "@/lib/data/orders";
 import { createCheckoutUrl } from "@/lib/kashier";
+import { sendNewOrderNotifications } from "@/lib/notifications";
 
 const ItemSchema = z.object({
   product_id: z.string().uuid(),
@@ -64,6 +65,10 @@ export async function POST(request: NextRequest) {
 
   // COD: order is complete; redirect to the confirmation page.
   if (input.payment_method === "cod") {
+    after(async () => {
+      const savedOrder = await getOrderByNumber(order.order_number);
+      if (savedOrder) await sendNewOrderNotifications(savedOrder);
+    });
     return NextResponse.json({
       order_number: order.order_number,
       redirect: `/checkout/success?order=${order.order_number}`,

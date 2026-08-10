@@ -207,9 +207,11 @@ export interface OrderForConfirmation {
   order_number: string;
   customer_name: string;
   customer_phone: string;
+  alt_phone: string | null;
   governorate: string;
   city: string;
   address: string;
+  notes: string | null;
   items_total: number;
   shipping_cost: number;
   discount: number;
@@ -236,7 +238,7 @@ export async function getOrderByNumber(
   const { data } = await sb
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, governorate, city, address, items_total, shipping_cost, discount, grand_total, payment_method, payment_status, fulfillment_status, created_at, order_items(id, name_en, name_ar, price, quantity, image)",
+      "id, order_number, customer_name, customer_phone, alt_phone, governorate, city, address, notes, items_total, shipping_cost, discount, grand_total, payment_method, payment_status, fulfillment_status, created_at, order_items(id, name_en, name_ar, price, quantity, image)",
     )
     .eq("order_number", orderNumber)
     .maybeSingle();

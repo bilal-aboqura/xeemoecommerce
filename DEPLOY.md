@@ -112,7 +112,26 @@ In your Kashier dashboard:
    `KASHIER_WEBHOOK_SECRET`
 4. Restart: `docker compose restart web`
 
-## 8. Set up auto-renew for SSL
+## 8. Configure free Telegram order alerts
+
+1. Open `@BotFather` in Telegram, run `/newbot`, and copy the bot token.
+2. Open the new bot, press **Start**, and send it any message. For a group,
+   add the bot to the group and send a message there instead.
+3. Open `https://api.telegram.org/botYOUR_TOKEN/getUpdates` and copy the
+   required chat's `message.chat.id` value.
+4. Add both values to `.env.production`:
+
+```env
+TELEGRAM_BOT_TOKEN=your-bot-token
+TELEGRAM_CHAT_ID=your-chat-id
+```
+
+5. Restart the app with `docker compose restart web`.
+
+COD orders send an alert as soon as the order is saved. Card orders send an
+alert only after Kashier confirms successful payment.
+
+## 9. Set up auto-renew for SSL
 
 ```bash
 # Add to crontab
@@ -122,7 +141,7 @@ crontab -e
 0 3 1 * * certbot renew --quiet --post-hook "cp /etc/letsencrypt/live/xeemo-eg.com/*.pem /opt/xeemo/nginx/certs/ && docker compose -f /opt/xeemo/docker-compose.yml restart nginx"
 ```
 
-## 9. Switch Kashier to LIVE
+## 10. Switch Kashier to LIVE
 
 In `.env.production`:
 

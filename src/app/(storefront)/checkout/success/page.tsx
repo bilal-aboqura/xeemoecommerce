@@ -3,7 +3,7 @@ import Image from "next/image";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { getOrderByNumber } from "@/lib/data/orders";
-import { buildOwnerWhatsAppUrl, mirrorOrderToSheets } from "@/lib/notifications";
+import { buildOwnerWhatsAppUrl } from "@/lib/notifications";
 import { getLang } from "@/lib/i18n/server";
 import { formatPrice } from "@/lib/utils";
 import { CheckCircle, Clock, MessageCircle, ArrowLeft, Package } from "lucide-react";
@@ -17,7 +17,6 @@ export default async function CheckoutSuccessPage({ searchParams }: { searchPara
   if (!order) notFound();
   const ar = lang === "ar";
 
-  void mirrorOrderToSheets(order).catch(() => {});
   const whatsapp = buildOwnerWhatsAppUrl(order);
 
   const isPaid = order.payment_status === "paid";
