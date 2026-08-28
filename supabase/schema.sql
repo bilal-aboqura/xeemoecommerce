@@ -118,7 +118,7 @@ create table if not exists public.orders (
   user_id           uuid references auth.users(id) on delete set null,
   customer_name     text not null,
   customer_phone    text not null,
-  alt_phone         text,
+  alt_phone         text not null,
   governorate       text not null,
   city              text not null,
   address           text not null,
@@ -134,11 +134,18 @@ create table if not exists public.orders (
                     check (fulfillment_status in ('pending','processing','shipped','delivered','cancelled')),
   kashier_payment_id text,
   discount_code     text,
+  bosta              jsonb,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
 create index if not exists orders_created_idx on public.orders(created_at desc);
 create index if not exists orders_user_idx     on public.orders(user_id);
+alter table public.orders add column if not exists bosta jsonb;
+update public.orders set alt_phone = customer_phone where alt_phone is null;
+alter table public.orders alter column alt_phone set not null;
+create unique index if not exists orders_bosta_tracking_idx
+  on public.orders ((bosta ->> 'trackingNumber'))
+  where bosta ->> 'trackingNumber' is not null;
 
 -- --------------------------------------------------------------- order_items
 create table if not exists public.order_items (
@@ -152,6 +159,44 @@ create table if not exists public.order_items (
   image      text
 );
 create index if not exists order_items_order_idx on public.order_items(order_id);
+
+-- --------------------------------------------------------------- reviews
+create table if not exists public.product_reviews (
+  id             uuid primary key default gen_random_uuid(),
+  product_id     uuid not null references public.products(id) on delete cascade,
+  reviewer_name  text not null,
+  rating         int not null check (rating between 1 and 5),
+  title          text,
+  body           text not null,
+  status         text not null default 'pending'
+                 check (status in ('pending','approved','rejected')),
+  moderated_at   timestamptz,
+  created_at     timestamptz not null default now()
+);
+create index if not exists product_reviews_product_status_idx
+  on public.product_reviews(product_id, status, created_at desc);
+
+-- --------------------------------------------------------------- Bosta pickups
+create table if not exists public.bosta_pickups (
+  automation_key       text primary key,
+  bosta_pickup_id      text unique,
+  puid                 text,
+  scheduled_date       date,
+  scheduled_time_slot  text,
+  state                text,
+  business_location_id text,
+  order_ids            jsonb not null default '[]'::jsonb,
+  tracking_numbers     jsonb not null default '[]'::jsonb,
+  parcel_count         int not null default 0,
+  telegram_sent        boolean not null default false,
+  status               text not null check (status in ('running','completed','skipped','failed')),
+  error                text,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+create index if not exists bosta_pickups_scheduled_idx
+  on public.bosta_pickups(scheduled_date desc);
+alter table public.bosta_pickups add column if not exists telegram_sent boolean not null default false;
 
 -- ----------------------------------------------------------------- discounts
 create table if not exists public.discounts (
@@ -191,6 +236,63 @@ returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end;
 $$;
 
+create or replace function public.admin_replace_order_items(
+  p_order_id uuid,
+  p_items jsonb,
+  p_items_total numeric,
+  p_shipping_cost numeric,
+  p_discount numeric,
+  p_grand_total numeric
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
+    raise exception 'An order must contain at least one item';
+  end if;
+
+  delete from public.order_items where order_id = p_order_id;
+
+  insert into public.order_items
+    (id, order_id, product_id, name_en, name_ar, price, quantity, image)
+  select
+    coalesce(item.id, gen_random_uuid()),
+    p_order_id,
+    item.product_id,
+    item.name_en,
+    item.name_ar,
+    item.price,
+    item.quantity,
+    item.image
+  from jsonb_to_recordset(p_items) as item(
+    id uuid,
+    product_id uuid,
+    name_en text,
+    name_ar text,
+    price numeric,
+    quantity int,
+    image text
+  );
+
+  update public.orders
+  set items_total = p_items_total,
+      shipping_cost = p_shipping_cost,
+      discount = p_discount,
+      grand_total = p_grand_total
+  where id = p_order_id;
+
+  if not found then
+    raise exception 'Order not found';
+  end if;
+end;
+$$;
+
+revoke all on function public.admin_replace_order_items(uuid, jsonb, numeric, numeric, numeric, numeric) from public, anon, authenticated;
+grant execute on function public.admin_replace_order_items(uuid, jsonb, numeric, numeric, numeric, numeric) to service_role;
+
 drop trigger if exists products_touch on public.products;
 create trigger products_touch before update on public.products
   for each row execute function public.touch_updated_at();
@@ -229,6 +331,8 @@ alter table public.addresses      enable row level security;
 alter table public.orders         enable row level security;
 alter table public.order_items    enable row level security;
 alter table public.newsletter_subscribers enable row level security;
+alter table public.product_reviews enable row level security;
+alter table public.bosta_pickups enable row level security;
 
 -- public reads
 drop policy if exists "categories_public_read" on public.categories;
@@ -238,6 +342,10 @@ create policy "categories_public_read" on public.categories
 drop policy if exists "products_public_read_active" on public.products;
 create policy "products_public_read_active" on public.products
   for select using (is_active = true);
+
+drop policy if exists "product_reviews_public_read_approved" on public.product_reviews;
+create policy "product_reviews_public_read_approved" on public.product_reviews
+  for select using (status = 'approved');
 
 drop policy if exists "locations_public_read" on public.locations;
 create policy "locations_public_read" on public.locations
@@ -279,3 +387,8 @@ create policy "order_items_owner_read" on public.order_items
       where o.id = order_id and o.user_id = auth.uid()
     )
   );
+
+revoke all on public.bosta_pickups from anon, authenticated;
+grant all on public.bosta_pickups to service_role;
+
+notify pgrst, 'reload schema';

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { ShoppingBag, Trash2, ArrowRight, Minus, Plus, Truck, CheckCircle } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { useCart, updateQuantity, removeFromCart, clearCart } from "@/lib/cart";
-import { calcItemsSubtotal, calcVolumeDiscount } from "@/lib/pricing";
+import { calcItemsSubtotal } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
 
 const FREE_SHIPPING_THRESHOLD = 600;
@@ -16,8 +16,6 @@ export default function CartPage() {
   const items = useCart();
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(FREE_SHIPPING_THRESHOLD);
   const subtotal = calcItemsSubtotal(items);
-  const volumeDiscount = calcVolumeDiscount(items);
-  const discountedSubtotal = subtotal - volumeDiscount;
   const ar = lang === "ar";
   const freeShipping = subtotal >= freeShippingThreshold;
   const remaining = Math.max(freeShippingThreshold - subtotal, 0);
@@ -127,12 +125,6 @@ export default function CartPage() {
                 <dt className="text-fg-dim">{t.cart.subtotal}</dt>
                 <dd className="font-medium text-fg">{formatPrice(subtotal, lang)}</dd>
               </div>
-              {volumeDiscount > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-fg-dim">{ar ? "خصم الكمية" : "Volume discount"}</dt>
-                  <dd className="font-medium text-emerald">-{formatPrice(volumeDiscount, lang)}</dd>
-                </div>
-              )}
               <div className="flex justify-between">
                 <dt className="text-fg-dim">{t.cart.shipping}</dt>
                 <dd className={freeShipping ? "font-medium text-emerald" : "text-fg-dim"}>
@@ -144,7 +136,7 @@ export default function CartPage() {
             </dl>
             <div className="mt-5 flex justify-between border-t border-border pt-5">
               <span className="font-semibold text-fg">{t.cart.total}</span>
-              <span className="text-xl font-bold text-brand">{formatPrice(discountedSubtotal, lang)}</span>
+              <span className="text-xl font-bold text-brand">{formatPrice(subtotal, lang)}</span>
             </div>
             <Link href="/checkout" className="btn btn-primary mt-6 w-full gap-2">
               {t.cart.checkout}

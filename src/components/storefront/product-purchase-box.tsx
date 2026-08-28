@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ShoppingBag, Zap, Package, CheckCircle, Banknote, Tag } from "lucide-react";
+import { ShoppingBag, Zap, Package, CheckCircle, Banknote } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { QuantityStepper } from "./quantity-stepper";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
-import { calcDiscountedLineTotal } from "@/lib/pricing";
 import type { ProductDetail } from "@/lib/data/catalog";
 
 export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
@@ -23,8 +22,6 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
   const desc = ar ? product.long_desc_ar : product.long_desc_en;
   const image = product.images?.[0] ?? "/images/placeholder.webp";
   const price = Number(product.price);
-  const qty2Total = calcDiscountedLineTotal(price, 2);
-  const qty3Total = calcDiscountedLineTotal(price, 3);
 
   function handleAdd() {
     if (out) return;
@@ -84,24 +81,6 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
             <span>{product.weight}</span>
           </div>
         )}
-
-        {/* Volume discount display */}
-        <div className="mt-6 glass p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-fg-muted">
-            <Tag size={12} className="text-brand" />
-            {t.product.qtyDiscount}
-          </div>
-          <div className="mt-2.5 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-fg-dim">{t.product.qty2}</span>
-              <span className="font-medium text-emerald">{formatPrice(qty2Total, lang)}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-fg-dim">{t.product.qty3}</span>
-              <span className="font-medium text-emerald">{formatPrice(qty3Total, lang)}</span>
-            </div>
-          </div>
-        </div>
 
         {/* Actions */}
         <div className="mt-6 flex flex-wrap items-center gap-3">

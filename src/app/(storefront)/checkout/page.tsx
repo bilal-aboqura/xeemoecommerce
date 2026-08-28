@@ -15,10 +15,11 @@ import {
   Wind,
   Plus,
   Check,
+  BadgePercent,
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { useCart, clearCart } from "@/lib/cart";
-import { calcItemsSubtotal, calcVolumeDiscount } from "@/lib/pricing";
+import { calcItemsSubtotal, calcOnlinePaymentDiscount } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
 import type { GovernorateOption } from "@/lib/data/locations";
 
@@ -51,7 +52,6 @@ export default function CheckoutPage() {
   const [shippingLoading, setShippingLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAltPhone, setShowAltPhone] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
   const [bumpAdded, setBumpAdded] = useState(false);
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
@@ -59,11 +59,13 @@ export default function CheckoutPage() {
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(600);
 
   const subtotal = calcItemsSubtotal(items);
-  const volumeDiscount = calcVolumeDiscount(items);
-  const discountedSubtotal = subtotal - volumeDiscount;
   const bumpTotal = bumpAdded && bumpProduct ? bumpProduct.bumpPrice : 0;
   const checkoutItemsTotal = subtotal + bumpTotal;
-  const checkoutPayableItemsTotal = discountedSubtotal + bumpTotal;
+  const onlineDiscount = calcOnlinePaymentDiscount(
+    checkoutItemsTotal,
+    form.payment_method,
+  );
+  const checkoutPayableItemsTotal = checkoutItemsTotal - onlineDiscount;
   const freeShipping = checkoutItemsTotal >= freeShippingThreshold;
 
   useEffect(() => {
@@ -153,7 +155,7 @@ export default function CheckoutPage() {
           className="glass flex w-full items-center justify-between p-4"
         >
           <span className="text-sm text-fg-muted">
-            {items.length} {t.checkout.items} &mdash; <span className="font-semibold text-brand">{formatPrice(discountedSubtotal, lang)}</span>
+            {items.length} {t.checkout.items} &mdash; <span className="font-semibold text-brand">{formatPrice(checkoutPayableItemsTotal, lang)}</span>
           </span>
           {mobileSummaryOpen ? <ChevronUp size={16} className="text-fg-dim" /> : <ChevronDown size={16} className="text-fg-dim" />}
         </button>
@@ -185,19 +187,9 @@ export default function CheckoutPage() {
                 <input required type="tel" dir="ltr" value={form.customer_phone} onChange={(e) => set("customer_phone", e.target.value)} className="input" placeholder="01XXXXXXXXX" />
               </Field>
 
-              {/* Collapsible alt phone */}
-              {showAltPhone ? (
-                <Field label={t.checkout.altPhone}>
-                  <input type="tel" dir="ltr" value={form.alt_phone} onChange={(e) => set("alt_phone", e.target.value)} className="input" placeholder="01XXXXXXXXX" />
-                </Field>
-              ) : (
-                <div className="flex items-end">
-                  <button type="button" onClick={() => setShowAltPhone(true)} className="flex items-center gap-1.5 text-xs text-fg-dim transition hover:text-brand">
-                    <Plus size={12} />
-                    {t.checkout.addAltPhone}
-                  </button>
-                </div>
-              )}
+              <Field label={t.checkout.altPhone}>
+                <input required type="tel" dir="ltr" value={form.alt_phone} onChange={(e) => set("alt_phone", e.target.value)} className="input" placeholder="01XXXXXXXXX" />
+              </Field>
 
               <Field label={t.checkout.governorate}>
                 <select required value={form.governorate} onChange={(e) => { set("governorate", e.target.value); set("city", ""); setShipping(null); }} className="input">
@@ -229,7 +221,7 @@ export default function CheckoutPage() {
             <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-fg-muted">{t.checkout.paymentMethod}</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <PaymentOption checked={form.payment_method === "cod"} onChange={() => set("payment_method", "cod")} Icon={Banknote} title={t.checkout.cod} hint={ar ? "ادفع نقدا عند الاستلام" : "Pay cash on arrival"} />
-              <PaymentOption checked={form.payment_method === "card"} onChange={() => set("payment_method", "card")} Icon={CreditCard} title={t.checkout.card} hint={ar ? "فيزا / ماستركارد عبر Kashier" : "Visa / Mastercard via Kashier"} />
+              <PaymentOption checked={form.payment_method === "card"} onChange={() => set("payment_method", "card")} Icon={CreditCard} title={t.checkout.card} hint={ar ? "خصم 5% — فيزا / ماستركارد عبر Kashier" : "5% off — Visa / Mastercard via Kashier"} badge={ar ? "خصم 5%" : "5% off"} />
             </div>
           </div>
 
@@ -273,10 +265,10 @@ export default function CheckoutPage() {
 
           <dl className="mt-5 space-y-2.5 border-t border-border pt-5 text-sm">
             <Row label={t.cart.subtotal} value={formatPrice(subtotal, lang)} />
-            {volumeDiscount > 0 && (
+            {onlineDiscount > 0 && (
               <div className="flex justify-between">
-                <dt className="text-fg-dim">{ar ? "خصم الكمية" : "Volume discount"}</dt>
-                <dd className="font-medium text-emerald">-{formatPrice(volumeDiscount, lang)}</dd>
+                <dt className="flex items-center gap-1.5 text-emerald-700"><BadgePercent size={14} />{ar ? "خصم الدفع الإلكتروني 5%" : "Online payment discount 5%"}</dt>
+                <dd className="font-medium text-emerald-700">-{formatPrice(onlineDiscount, lang)}</dd>
               </div>
             )}
             {bumpTotal > 0 && <Row label={ar ? "عرض إضافي" : "Add-on offer"} value={formatPrice(bumpTotal, lang)} />}
@@ -388,7 +380,7 @@ function Field({ label, children, className = "" }: { label: string; children: R
   return (<label className={`block ${className}`}><span className="mb-1.5 block text-xs font-medium text-fg-dim">{label}</span>{children}</label>);
 }
 
-function PaymentOption({ checked, onChange, Icon, title, hint }: { checked: boolean; onChange: () => void; Icon: React.ComponentType<{ size?: number }>; title: string; hint: string }) {
+function PaymentOption({ checked, onChange, Icon, title, hint, badge }: { checked: boolean; onChange: () => void; Icon: React.ComponentType<{ size?: number }>; title: string; hint: string; badge?: string }) {
   return (
     <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${checked ? "border-brand bg-brand/5" : "border-border hover:border-border-hover"}`}>
       <input type="radio" checked={checked} onChange={onChange} className="mt-1 accent-brand" />
@@ -396,7 +388,13 @@ function PaymentOption({ checked, onChange, Icon, title, hint }: { checked: bool
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${checked ? "bg-brand/10 text-brand" : "bg-white/[0.03] text-fg-dim"}`}>
           <Icon size={18} />
         </div>
-        <div><span className="block text-sm font-semibold text-fg">{title}</span><span className="block text-xs text-fg-dim">{hint}</span></div>
+        <div>
+          <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-fg">
+            {title}
+            {badge ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">{badge}</span> : null}
+          </span>
+          <span className="block text-xs text-fg-dim">{hint}</span>
+        </div>
       </div>
     </label>
   );

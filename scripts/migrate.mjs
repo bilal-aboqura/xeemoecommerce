@@ -25,6 +25,7 @@ const CATEGORY_FILES = [
   { file: "montgatw.json", slug: "motocare", en: "Moto Care", ar: "عناية الموتوسيكلات", image: "/images/motocare.webp" },
   { file: "montgatk.json", slug: "carpets", en: "Carpets & Furniture", ar: "السجاد والأثاث", image: "/images/carpetscare.webp" },
   { file: "montgataf.json", slug: "air-freshener", en: "Air Freshener", ar: "معطر الجو", image: null },
+  { file: null, slug: "home-care", en: "Home Care", ar: "العناية بالمنزل", image: "/images/home-care.jpeg" },
 ];
 
 // Governorate Arabic → English
@@ -120,12 +121,12 @@ async function main() {
   console.log("✓ Schema applied");
 
   // 2) Categories
-  for (const c of CATEGORY_FILES) {
+  for (const [categoryIndex, c] of CATEGORY_FILES.entries()) {
     await client.query(
       `insert into public.categories (slug, name_en, name_ar, image, sort_order)
        values ($1,$2,$3,$4,$5)
-       on conflict (slug) do update set name_en=excluded.name_en, name_ar=excluded.name_ar, image=excluded.image`,
-      [c.slug, c.en, c.ar, c.image, 0],
+       on conflict (slug) do update set name_en=excluded.name_en, name_ar=excluded.name_ar, image=excluded.image, sort_order=excluded.sort_order`,
+      [c.slug, c.en, c.ar, c.image, categoryIndex],
     );
   }
   const { rows: cats } = await client.query("select id, slug from public.categories");
@@ -135,6 +136,7 @@ async function main() {
   // 3) Products
   let productCount = 0;
   for (const c of CATEGORY_FILES) {
+    if (!c.file) continue;
     const file = path.join(ORIGINAL, "Data", c.file);
     const raw = JSON.parse(fs.readFileSync(file, "utf8"));
     const items = raw.products || [];

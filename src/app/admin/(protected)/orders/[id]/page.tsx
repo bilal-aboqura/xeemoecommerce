@@ -1,12 +1,12 @@
-import { adminGetOrder } from "@/lib/data/admin-crud";
+import { adminGetOrder, adminListProducts } from "@/lib/data/admin-crud";
+import { OrderItemsEditor } from "@/components/admin/order-items-editor";
+import { BostaShipmentPanel } from "@/components/admin/bosta-shipment-panel";
+import { getBostaConfiguration, type BostaShipment } from "@/lib/bosta";
 import { getLang } from "@/lib/i18n/server";
-import { formatPrice } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowLeft,
-  Package,
   User,
   MapPin,
   Phone,
@@ -22,14 +22,19 @@ export default async function OrderDetailPage({
   const { id } = await params;
   const lang = await getLang();
   const ar = lang === "ar";
+  const bostaConfigured = getBostaConfiguration().ready;
 
-  const order = await adminGetOrder(id);
+  const [order, products] = await Promise.all([
+    adminGetOrder(id),
+    adminListProducts(),
+  ]);
   if (!order) notFound();
 
   const items = (order.order_items ?? []) as {
     id: string;
+    product_id: string | null;
     name_en: string;
-    name_ar: string;
+    name_ar: string | null;
     price: number;
     quantity: number;
     image: string | null;
@@ -72,93 +77,30 @@ export default async function OrderDetailPage({
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {/* ── Left column: items + totals ────────────────────────────── */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Items table */}
-          <div className="glass-elevated p-5">
-            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-fg-muted">
-              <Package size={14} />
-              <span>{ar ? "العناصر" : "Items"}</span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase tracking-wider text-fg-dim">
-                  <tr>
-                    <th className="py-2.5 pr-4">{ar ? "المنتج" : "Product"}</th>
-                    <th className="py-2.5 pr-4 text-center">{ar ? "الكمية" : "Qty"}</th>
-                    <th className="py-2.5 pr-4 text-right">{ar ? "السعر" : "Price"}</th>
-                    <th className="py-2.5 text-right">{ar ? "المجموع" : "Total"}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id} className="border-t border-border">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-3">
-                          {item.image ? (
-                            <Image
-                              src={item.image}
-                              alt={ar ? item.name_ar : item.name_en}
-                              width={40}
-                              height={40}
-                              className="h-10 w-10 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.04]">
-                              <Package size={16} className="text-fg-dim" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-fg">
-                              {ar ? item.name_ar : item.name_en}
-                            </p>
-                            <p className="text-xs text-fg-dim">
-                              {ar ? item.name_en : item.name_ar}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 text-center text-fg">{item.quantity}</td>
-                      <td className="py-3 pr-4 text-right text-fg-dim">
-                        {formatPrice(Number(item.price), lang)}
-                      </td>
-                      <td className="py-3 text-right font-semibold text-fg">
-                        {formatPrice(Number(item.price) * item.quantity, lang)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Totals */}
-          <div className="glass-elevated p-5">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-fg-dim">
-                <span>{ar ? "مجموع العناصر" : "Items total"}</span>
-                <span>{formatPrice(Number(order.items_total), lang)}</span>
-              </div>
-              <div className="flex justify-between text-fg-dim">
-                <span>{ar ? "الشحن" : "Shipping"}</span>
-                <span>{formatPrice(Number(order.shipping_cost), lang)}</span>
-              </div>
-              {Number(order.discount) > 0 && (
-                <div className="flex justify-between text-emerald">
-                  <span>
-                    {ar ? "الخصم" : "Discount"}
-                    {order.discount_code ? ` (${order.discount_code})` : ""}
-                  </span>
-                  <span>-{formatPrice(Number(order.discount), lang)}</span>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-border pt-2 font-heading text-lg font-bold text-fg">
-                <span>{ar ? "الإجمالي" : "Grand total"}</span>
-                <span className="text-brand">
-                  {formatPrice(Number(order.grand_total), lang)}
-                </span>
-              </div>
-            </div>
-          </div>
+          <OrderItemsEditor
+            orderId={order.id}
+            initialItems={items.map((item) => ({
+              ...item,
+              price: Number(item.price),
+            }))}
+            products={products.map((product) => ({
+              id: product.id,
+              name_en: product.name_en,
+              name_ar: product.name_ar,
+              price: Number(product.price),
+              stock: product.stock,
+              images: product.images,
+            }))}
+            initialTotals={{
+              items_total: Number(order.items_total),
+              shipping_cost: Number(order.shipping_cost),
+              discount: Number(order.discount),
+              grand_total: Number(order.grand_total),
+            }}
+            discountCode={order.discount_code}
+            paymentMethod={order.payment_method}
+            lang={lang}
+          />
         </div>
 
         {/* ── Right column: customer + payment info ──────────────────── */}
@@ -222,6 +164,13 @@ export default async function OrderDetailPage({
               )}
             </div>
           </div>
+
+          <BostaShipmentPanel
+            orderId={order.id}
+            initialShipment={(order.bosta as BostaShipment | null) ?? null}
+            configured={bostaConfigured}
+            lang={lang}
+          />
 
           {/* Notes */}
           {order.notes && (

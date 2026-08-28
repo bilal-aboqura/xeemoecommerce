@@ -16,7 +16,7 @@ const ItemSchema = z.object({
 const BodySchema = z.object({
   customer_name: z.string().min(2).max(120),
   customer_phone: z.string().min(6).max(20),
-  alt_phone: z.string().max(20).optional(),
+  alt_phone: z.string().min(6).max(20),
   governorate: z.string().min(1),
   city: z.string().min(1),
   address: z.string().min(3).max(500),

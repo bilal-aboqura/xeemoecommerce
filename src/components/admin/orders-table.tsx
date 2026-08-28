@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { formatPrice, cn } from "@/lib/utils";
 import { useToast } from "@/components/admin/toast";
 import type { AdminOrder } from "@/lib/data/admin-crud";
+import { getBostaStateMeta } from "@/lib/bosta-status";
 
 const PAYMENT_OPTIONS = ["pending", "paid", "failed", "refunded"] as const;
 const FULFILLMENT_OPTIONS = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
@@ -130,13 +131,14 @@ export function OrdersTable({
               <th className="px-5 py-4 sm:px-6">{ar ? "الإجمالي" : "Total"}</th>
               <th className="px-5 py-4 sm:px-6">{ar ? "الدفع" : "Payment"}</th>
               <th className="px-5 py-4 sm:px-6">{ar ? "الحالة" : "Fulfillment"}</th>
+              <th className="px-5 py-4 sm:px-6">Bosta</th>
               <th className="px-5 py-4 sm:px-6">{ar ? "التاريخ" : "Date"}</th>
             </tr>
           </thead>
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-fg-dim sm:px-6">
+                <td colSpan={7} className="px-5 py-12 text-center text-fg-dim sm:px-6">
                   {ar ? "لا توجد طلبات بعد." : "No orders yet."}
                 </td>
               </tr>
@@ -216,6 +218,18 @@ export function OrdersTable({
                           <Loader2 size={14} className="absolute end-1.5 animate-spin text-fg-dim" />
                         ) : null}
                       </div>
+                    </td>
+                    <td className="px-5 py-4 sm:px-6">
+                      {order.bosta ? (
+                        <div>
+                          <span className="pill pill-info">
+                            {ar ? getBostaStateMeta(order.bosta.stateCode).labelAr : getBostaStateMeta(order.bosta.stateCode).labelEn}
+                          </span>
+                          <p className="mt-1 font-mono text-[11px] text-fg-dim" dir="ltr">{order.bosta.trackingNumber}</p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-fg-dim">{ar ? "غير مرسل" : "Not sent"}</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-xs text-fg-dim sm:px-6">
                       {new Date(order.created_at).toLocaleDateString(ar ? "ar-EG" : "en-GB")}

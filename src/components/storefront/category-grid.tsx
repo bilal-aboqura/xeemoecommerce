@@ -54,15 +54,25 @@ const CATEGORY_META: Record<
     descAr:
       "معطرات بروائح ثابتة تضيف إحساس أنضف وأهدى داخل العربية من غير ما تبقى مزعجة.",
   },
+  "home-care": {
+    href: "/category/home-care",
+    fallbackImage: "/images/home-care.jpeg",
+    imageClassName: "object-center",
+    descEn:
+      "Everyday care for cleaner rooms, refreshed fabrics, and a home that feels properly looked after.",
+    descAr:
+      "منتجات عناية يومية لنظافة الغرف والمفروشات وبيت دايمًا شكله وإحساسه أحسن.",
+  },
 };
 
-const CATEGORY_ORDER = ["carcare", "motocare", "carpets", "air-freshener"] as const;
+const CATEGORY_ORDER = ["carcare", "motocare", "carpets", "air-freshener", "home-care"] as const;
 
 const NAV_KEY_BY_SLUG = {
   carcare: "carcare",
   motocare: "motocare",
   carpets: "carpets",
   "air-freshener": "freshener",
+  "home-care": "homecare",
 } as const;
 
 export function CategoryGrid({
@@ -106,7 +116,7 @@ export function CategoryGrid({
           className="-mx-5 mt-8 overflow-x-auto px-5 pb-2 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          <FadeInStagger className="flex w-max snap-x snap-mandatory gap-4 lg:grid lg:w-auto lg:grid-cols-4 lg:gap-5">
+          <FadeInStagger className="flex w-max snap-x snap-mandatory gap-4 lg:grid lg:w-auto lg:grid-cols-3 lg:gap-5 xl:grid-cols-5">
             {cards.map((card) => (
               <FadeIn key={card.href} className="shrink-0 snap-start lg:shrink-1">
                 <Link

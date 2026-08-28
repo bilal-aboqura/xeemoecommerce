@@ -15,11 +15,12 @@ import {
   BarChart3,
   Layers,
   Mailbox,
+  MessageSquareText,
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { cn } from "@/lib/utils";
 
-type NavKey = "dashboard" | "analytics" | "products" | "orders" | "customers" | "newsletter" | "discounts" | "shipping" | "bundles" | "content" | "customize" | "settings";
+type NavKey = "dashboard" | "analytics" | "products" | "orders" | "reviews" | "customers" | "newsletter" | "discounts" | "shipping" | "bundles" | "content" | "customize" | "settings";
 
 interface NavItem {
   href: string;
@@ -45,6 +46,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/products", key: "products", Icon: Package },
       { href: "/admin/orders", key: "orders", Icon: ShoppingCart },
+      { href: "/admin/reviews", key: "reviews", Icon: MessageSquareText },
       { href: "/admin/customers", key: "customers", Icon: Users },
       { href: "/admin/newsletter", key: "newsletter", Icon: Mailbox },
     ],

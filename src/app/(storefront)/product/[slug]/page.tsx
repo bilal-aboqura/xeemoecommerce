@@ -9,6 +9,8 @@ import {
 import { ProductPurchaseBox } from "@/components/storefront/product-purchase-box";
 import { ProductCard } from "@/components/storefront/product-card";
 import { ProductJsonLd } from "@/components/seo/product-json-ld";
+import { ProductReviews } from "@/components/storefront/product-reviews";
+import { getApprovedProductReviews } from "@/lib/data/reviews";
 import { getLang } from "@/lib/i18n/server";
 
 export async function generateMetadata({
@@ -49,10 +51,11 @@ export default async function ProductPage({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [related, category, lang] = await Promise.all([
+  const [related, category, lang, reviews] = await Promise.all([
     getRelatedProducts(product, 4),
     product.category_id ? getCategoryById(product.category_id) : null,
     getLang(),
+    getApprovedProductReviews(product.id),
   ]);
 
   const name = lang === "ar" ? product.name_ar : product.name_en;
@@ -81,6 +84,8 @@ export default async function ProductPage({
       </nav>
 
       <ProductPurchaseBox product={product} />
+
+      <ProductReviews productId={product.id} reviews={reviews} lang={lang} />
 
       {/* Related */}
       {related.length > 0 && (

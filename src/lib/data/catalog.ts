@@ -30,6 +30,14 @@ export interface CategoryInfo {
   image: string | null;
 }
 
+const HOME_CARE_FALLBACK: CategoryInfo = {
+  id: "",
+  slug: "home-care",
+  name_en: "Home Care",
+  name_ar: "العناية بالمنزل",
+  image: "/images/home-care.jpeg",
+};
+
 /** Featured + recent active products for the homepage. */
 export async function getFeaturedProducts(limit = 8): Promise<ProductCard[]> {
   const supabase = await getSupabaseServerClient();
@@ -54,23 +62,26 @@ export async function getCategoryBySlug(
   slug: string,
 ): Promise<CategoryInfo | null> {
   const supabase = await getSupabaseServerClient();
-  if (!supabase) return null;
+  if (!supabase) return slug === "home-care" ? HOME_CARE_FALLBACK : null;
   const { data } = await supabase
     .from("categories")
     .select("id, slug, name_en, name_ar, image")
     .eq("slug", slug)
     .maybeSingle();
-  return (data as CategoryInfo) ?? null;
+  return (data as CategoryInfo) ?? (slug === "home-care" ? HOME_CARE_FALLBACK : null);
 }
 
 export async function getAllCategories(): Promise<CategoryInfo[]> {
   const supabase = await getSupabaseServerClient();
-  if (!supabase) return [];
+  if (!supabase) return [HOME_CARE_FALLBACK];
   const { data } = await supabase
     .from("categories")
     .select("id, slug, name_en, name_ar, image")
     .order("sort_order", { ascending: true });
-  return (data as CategoryInfo[]) ?? [];
+  const categories = (data as CategoryInfo[]) ?? [];
+  return categories.some((category) => category.slug === "home-care")
+    ? categories
+    : [...categories, HOME_CARE_FALLBACK];
 }
 
 export async function getCategoryById(id: string): Promise<CategoryInfo | null> {
@@ -92,6 +103,7 @@ export async function getProductsByCategory(
   if (!supabase) return [];
   const category = await getCategoryBySlug(categorySlug);
   if (!category) return [];
+  if (!category.id) return [];
   const { data, error } = await supabase
     .from("products")
     .select(

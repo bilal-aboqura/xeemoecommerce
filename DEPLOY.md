@@ -112,7 +112,43 @@ In your Kashier dashboard:
    `KASHIER_WEBHOOK_SECRET`
 4. Restart: `docker compose restart web`
 
-## 8. Configure free Telegram order alerts
+## 8. Configure Bosta shipping and automatic pickup
+
+1. Add the Bosta values to `.env.production`:
+
+```env
+BOSTA_API_KEY=your-bosta-api-key
+BOSTA_WEBHOOK_SECRET=generate-a-long-random-secret
+BOSTA_PICKUP_HAS_FRAGILE_ITEMS=false
+BOSTA_PICKUP_NOTES=Xeemo confirmed orders
+CRON_SECRET=generate-another-long-random-secret
+```
+
+2. In the Bosta dashboard, add a default pickup location with a default contact
+   name and phone number. Shipment creation sends
+   `https://xeemo-eg.com/api/webhooks/bosta` to Bosta with the authenticated
+   webhook header automatically.
+
+3. Run the database migration and restart the app:
+
+```bash
+node --env-file=.env.production scripts/migrate.mjs
+docker compose up -d --build
+```
+
+4. Schedule the daily pickup check at midnight Cairo time. The automation only
+   creates a pickup when at least three orders are in `processing` status.
+
+```cron
+CRON_TZ=Africa/Cairo
+0 0 * * * curl -fsS -H "Authorization: Bearer REPLACE_WITH_CRON_SECRET" https://xeemo-eg.com/api/cron/bosta-pickup/daily >/dev/null
+```
+
+Admins can create or refresh a shipment and download its AWB from the order
+details page. The orders page also supports importing existing Bosta shipments
+and manually running the pickup workflow.
+
+## 9. Configure free Telegram order alerts
 
 1. Open `@BotFather` in Telegram, run `/newbot`, and copy the bot token.
 2. Open the new bot, press **Start**, and send it any message. For a group,
@@ -131,7 +167,7 @@ TELEGRAM_CHAT_ID=your-chat-id
 COD orders send an alert as soon as the order is saved. Card orders send an
 alert only after Kashier confirms successful payment.
 
-## 9. Set up auto-renew for SSL
+## 10. Set up auto-renew for SSL
 
 ```bash
 # Add to crontab
@@ -141,7 +177,7 @@ crontab -e
 0 3 1 * * certbot renew --quiet --post-hook "cp /etc/letsencrypt/live/xeemo-eg.com/*.pem /opt/xeemo/nginx/certs/ && docker compose -f /opt/xeemo/docker-compose.yml restart nginx"
 ```
 
-## 10. Switch Kashier to LIVE
+## 11. Switch Kashier to LIVE
 
 In `.env.production`:
 

@@ -77,6 +77,7 @@ export function Footer() {
             <FooterLink href="/category/motocare">{t.nav.motocare}</FooterLink>
             <FooterLink href="/category/carpets">{t.nav.carpets}</FooterLink>
             <FooterLink href="/category/air-freshener">{t.nav.freshener}</FooterLink>
+            <FooterLink href="/category/home-care">{t.nav.homecare}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t.footer.legal}>

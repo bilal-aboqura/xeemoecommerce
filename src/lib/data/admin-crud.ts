@@ -1,4 +1,5 @@
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
+import type { BostaShipment } from "@/lib/bosta";
 
 // ── Products ─────────────────────────────────────────────────────────────────
 export interface AdminProduct {
@@ -67,6 +68,7 @@ export interface AdminOrder {
   payment_method: string;
   payment_status: string;
   fulfillment_status: string;
+  bosta: BostaShipment | null;
   created_at: string;
 }
 
@@ -76,7 +78,7 @@ export async function adminListOrders(limit = 100): Promise<AdminOrder[]> {
   const { data, error } = await sb
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, governorate, city, items_total, shipping_cost, discount, grand_total, payment_method, payment_status, fulfillment_status, created_at",
+      "id, order_number, customer_name, customer_phone, governorate, city, items_total, shipping_cost, discount, grand_total, payment_method, payment_status, fulfillment_status, bosta, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(limit);

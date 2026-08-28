@@ -12,6 +12,7 @@ import {
   Bike,
   Armchair,
   Wind,
+  House,
   MessageCircle,
 } from "lucide-react";
 import { useLang } from "@/components/language/provider";
@@ -23,6 +24,7 @@ const PRODUCT_LINKS = [
   { href: "/category/motocare", key: "motocare" as const, Icon: Bike },
   { href: "/category/carpets", key: "carpets" as const, Icon: Armchair },
   { href: "/category/air-freshener", key: "freshener" as const, Icon: Wind },
+  { href: "/category/home-care", key: "homecare" as const, Icon: House },
 ];
 
 export function Navbar() {

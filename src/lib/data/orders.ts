@@ -1,11 +1,11 @@
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCheckoutSettings } from "@/lib/data/catalog";
-import { calcItemsSubtotal, calcVolumeDiscount } from "@/lib/pricing";
+import { calcItemsSubtotal, calcOnlinePaymentDiscount } from "@/lib/pricing";
 
 export interface CreateOrderInput {
   customer_name: string;
   customer_phone: string;
-  alt_phone?: string;
+  alt_phone: string;
   governorate: string;
   city: string;
   address: string;
@@ -110,21 +110,9 @@ export async function resolveDiscount(
 }
 
 /**
- * Volume discount: 2 of the same product → 10% off the first 2 units,
- * 3+ → 15% off the first 3 units. Returns total discount amount across all qualifying items.
- */
-export function calcLegacyVolumeDiscount(
-  items: CreateOrderInput["items"],
-): number {
-  return calcVolumeDiscount(items);
-}
-
-/**
  * Create an order (with line items + snapshot). Uses the service role.
  * For COD the order is immediately "pending payment / pending fulfillment".
  * For card it stays pending until the Kashier webhook marks it paid.
- *
- * Applies volume discounts automatically (2 → 10%, 3+ → 15% per line item).
  */
 export async function createOrder(
   input: CreateOrderInput,
@@ -133,7 +121,10 @@ export async function createOrder(
   if (!sb || input.items.length === 0) return null;
 
   const itemsTotal = calcItemsSubtotal(input.items);
-  const volumeDiscount = calcVolumeDiscount(input.items);
+  const onlinePaymentDiscount = calcOnlinePaymentDiscount(
+    itemsTotal,
+    input.payment_method,
+  );
   const [shipping, checkoutSettings] = await Promise.all([
     getShippingCost(input.governorate, input.city),
     getCheckoutSettings(),
@@ -141,7 +132,7 @@ export async function createOrder(
   const shippingCost =
     itemsTotal >= checkoutSettings.freeShippingThreshold ? 0 : shipping.cost;
   const codeDiscount = await resolveDiscount(input.discount_code, itemsTotal);
-  const totalDiscount = volumeDiscount + (codeDiscount?.amount ?? 0);
+  const totalDiscount = onlinePaymentDiscount + (codeDiscount?.amount ?? 0);
   const grandTotal = Math.max(
     0,
     itemsTotal + shippingCost - totalDiscount,
@@ -166,7 +157,7 @@ export async function createOrder(
       user_id: input.user_id ?? null,
       customer_name: input.customer_name,
       customer_phone: input.customer_phone,
-      alt_phone: input.alt_phone ?? null,
+      alt_phone: input.alt_phone,
       governorate: input.governorate,
       city: input.city,
       address: input.address,
