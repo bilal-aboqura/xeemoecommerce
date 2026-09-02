@@ -8,6 +8,7 @@ import { useLang } from "@/components/language/provider";
 import { useCart, updateQuantity, removeFromCart, clearCart } from "@/lib/cart";
 import { calcItemsSubtotal } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 const FREE_SHIPPING_THRESHOLD = 600;
 
@@ -138,7 +139,21 @@ export default function CartPage() {
               <span className="font-semibold text-fg">{t.cart.total}</span>
               <span className="text-xl font-bold text-brand">{formatPrice(subtotal, lang)}</span>
             </div>
-            <Link href="/checkout" className="btn btn-primary mt-6 w-full gap-2">
+            <Link
+              href="/checkout"
+              onClick={() => trackMetaEvent("InitiateCheckout", {
+                value: subtotal,
+                currency: "EGP",
+                content_type: "product",
+                content_ids: items.map((item) => item.id),
+                contents: items.map((item) => ({
+                  id: item.id,
+                  quantity: item.quantity,
+                  item_price: item.price,
+                })),
+              })}
+              className="btn btn-primary mt-6 w-full gap-2"
+            >
               {t.cart.checkout}
               <ArrowRight size={16} />
             </Link>

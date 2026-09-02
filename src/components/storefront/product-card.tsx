@@ -6,6 +6,7 @@ import { ShoppingBag, Star, Banknote } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
+import { productMetaParams, trackMetaEvent } from "@/lib/meta-pixel";
 import type { ProductCard as ProductCardData } from "@/lib/data/catalog";
 
 export function ProductCard({ product }: { product: ProductCardData }) {
@@ -28,6 +29,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       image,
       stock: product.stock,
     });
+    trackMetaEvent("AddToCart", productMetaParams({
+      id: product.id,
+      price: Number(product.price),
+    }));
   }
 
   return (

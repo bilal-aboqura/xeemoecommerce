@@ -1,12 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import Script from "next/script";
 import { notFound } from "next/navigation";
 import { getOrderByNumber } from "@/lib/data/orders";
 import { buildOwnerWhatsAppUrl } from "@/lib/notifications";
 import { getLang } from "@/lib/i18n/server";
 import { formatPrice } from "@/lib/utils";
 import { CheckCircle, Clock, MessageCircle, ArrowLeft, Package } from "lucide-react";
+import { MetaPurchase } from "@/components/storefront/meta-purchase";
 
 export const dynamic = "force-dynamic";
 
@@ -20,20 +20,21 @@ export default async function CheckoutSuccessPage({ searchParams }: { searchPara
   const whatsapp = buildOwnerWhatsAppUrl(order);
 
   const isPaid = order.payment_status === "paid";
+  const purchaseConfirmed = order.payment_method === "cod" || isPaid;
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-14">
-      {/* Fire Meta Pixel Purchase Event */}
-      <Script id="meta-pixel-purchase">
-        {`
-          if (typeof fbq === 'function') {
-            fbq('track', 'Purchase', {
-              value: ${order.grand_total},
-              currency: 'EGP'
-            });
-          }
-        `}
-      </Script>
+      {purchaseConfirmed && (
+        <MetaPurchase
+          orderNumber={order.order_number}
+          value={Number(order.grand_total)}
+          contents={order.order_items.map((item) => ({
+            id: item.product_id,
+            quantity: item.quantity,
+            item_price: Number(item.price),
+          }))}
+        />
+      )}
 
       <div className="glass-elevated p-8 text-center">
         <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${isPaid || order.payment_method === "cod" ? "bg-emerald/10 text-emerald" : "bg-gold/10 text-gold"}`}>

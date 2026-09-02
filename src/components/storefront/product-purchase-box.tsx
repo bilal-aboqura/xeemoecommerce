@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ShoppingBag, Zap, Package, CheckCircle, Banknote } from "lucide-react";
@@ -8,6 +8,7 @@ import { useLang } from "@/components/language/provider";
 import { QuantityStepper } from "./quantity-stepper";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
+import { productMetaParams, trackMetaEvent } from "@/lib/meta-pixel";
 import type { ProductDetail } from "@/lib/data/catalog";
 
 export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
@@ -23,9 +24,14 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
   const image = product.images?.[0] ?? "/images/placeholder.webp";
   const price = Number(product.price);
 
+  useEffect(() => {
+    trackMetaEvent("ViewContent", productMetaParams({ id: product.id, price }));
+  }, [price, product.id]);
+
   function handleAdd() {
     if (out) return;
     addToCart({ id: product.id, slug: product.slug, name_en: product.name_en, name_ar: product.name_ar, price, image, stock: product.stock }, qty);
+    trackMetaEvent("AddToCart", productMetaParams({ id: product.id, price, quantity: qty }));
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
@@ -33,6 +39,7 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
   function buyNow() {
     if (out) return;
     addToCart({ id: product.id, slug: product.slug, name_en: product.name_en, name_ar: product.name_ar, price, image, stock: product.stock }, qty);
+    trackMetaEvent("AddToCart", productMetaParams({ id: product.id, price, quantity: qty }));
     router.push("/cart");
   }
 
