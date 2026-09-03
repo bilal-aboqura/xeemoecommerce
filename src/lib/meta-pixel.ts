@@ -1,7 +1,7 @@
 "use client";
 
 export const META_PIXEL_ID =
-  process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "1052393730508570";
+  process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "1531675262043662";
 
 type MetaPixelParams = Record<
   string,
