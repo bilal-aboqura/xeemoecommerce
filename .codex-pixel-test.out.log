@@ -20,3 +20,5 @@
  GET /api/checkout-data 200 in 251ms (next.js: 4ms, proxy.ts: 3ms, application-code: 244ms)
  GET /cart 200 in 51ms (next.js: 4ms, proxy.ts: 3ms, application-code: 44ms)
  GET /api/checkout-data 200 in 295ms (next.js: 3ms, proxy.ts: 3ms, application-code: 289ms)
+✓ Compiled in 21.5s
+✓ Finished filesystem cache database compaction in 12.2s
