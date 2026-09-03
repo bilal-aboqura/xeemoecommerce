@@ -23,3 +23,6 @@
 ✓ Compiled in 21.5s
 ✓ Finished filesystem cache database compaction in 12.2s
 ✓ Compiled in 97ms
+✓ Compiled in 70ms
+✓ Finished filesystem cache database compaction in 11.5s
+ GET /admin/login?next=%2Fadmin%2Fanalytics 200 in 1204ms (next.js: 573ms, proxy.ts: 3ms, application-code: 627ms)

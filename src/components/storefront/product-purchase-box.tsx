@@ -9,6 +9,7 @@ import { QuantityStepper } from "./quantity-stepper";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/lib/cart";
 import { productMetaParams, trackMetaEvent } from "@/lib/meta-pixel";
+import { trackStoreEvent } from "@/lib/store-analytics";
 import type { ProductDetail } from "@/lib/data/catalog";
 
 export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
@@ -32,6 +33,7 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
     if (out) return;
     addToCart({ id: product.id, slug: product.slug, name_en: product.name_en, name_ar: product.name_ar, price, image, stock: product.stock }, qty);
     trackMetaEvent("AddToCart", productMetaParams({ id: product.id, price, quantity: qty }));
+    trackStoreEvent("add_to_cart");
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
@@ -40,6 +42,7 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
     if (out) return;
     addToCart({ id: product.id, slug: product.slug, name_en: product.name_en, name_ar: product.name_ar, price, image, stock: product.stock }, qty);
     trackMetaEvent("AddToCart", productMetaParams({ id: product.id, price, quantity: qty }));
+    trackStoreEvent("add_to_cart");
     router.push("/cart");
   }
 

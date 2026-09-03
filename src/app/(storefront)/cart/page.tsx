@@ -9,6 +9,7 @@ import { useCart, updateQuantity, removeFromCart, clearCart } from "@/lib/cart";
 import { calcItemsSubtotal } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
 import { trackMetaEvent } from "@/lib/meta-pixel";
+import { trackStoreEvent } from "@/lib/store-analytics";
 
 const FREE_SHIPPING_THRESHOLD = 600;
 
@@ -141,17 +142,20 @@ export default function CartPage() {
             </div>
             <Link
               href="/checkout"
-              onClick={() => trackMetaEvent("InitiateCheckout", {
-                value: subtotal,
-                currency: "EGP",
-                content_type: "product",
-                content_ids: items.map((item) => item.id),
-                contents: items.map((item) => ({
-                  id: item.id,
-                  quantity: item.quantity,
-                  item_price: item.price,
-                })),
-              })}
+              onClick={() => {
+                trackMetaEvent("InitiateCheckout", {
+                  value: subtotal,
+                  currency: "EGP",
+                  content_type: "product",
+                  content_ids: items.map((item) => item.id),
+                  contents: items.map((item) => ({
+                    id: item.id,
+                    quantity: item.quantity,
+                    item_price: item.price,
+                  })),
+                });
+                trackStoreEvent("initiate_checkout");
+              }}
               className="btn btn-primary mt-6 w-full gap-2"
             >
               {t.cart.checkout}

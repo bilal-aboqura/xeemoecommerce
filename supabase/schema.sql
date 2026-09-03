@@ -160,6 +160,20 @@ create table if not exists public.order_items (
 );
 create index if not exists order_items_order_idx on public.order_items(order_id);
 
+-- ----------------------------------------------------------- store analytics
+-- Anonymous, first-party storefront events. No names, email addresses, IPs,
+-- or detailed device data are stored here.
+create table if not exists public.store_events (
+  id          uuid primary key default gen_random_uuid(),
+  visitor_id  uuid not null,
+  event_type  text not null check (event_type in ('page_view', 'add_to_cart', 'initiate_checkout')),
+  path        text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists store_events_created_idx on public.store_events(created_at desc);
+create index if not exists store_events_visitor_created_idx on public.store_events(visitor_id, created_at desc);
+create index if not exists store_events_type_created_idx on public.store_events(event_type, created_at desc);
+
 -- --------------------------------------------------------------- reviews
 create table if not exists public.product_reviews (
   id             uuid primary key default gen_random_uuid(),
@@ -330,6 +344,7 @@ alter table public.profiles       enable row level security;
 alter table public.addresses      enable row level security;
 alter table public.orders         enable row level security;
 alter table public.order_items    enable row level security;
+alter table public.store_events   enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.product_reviews enable row level security;
 alter table public.bosta_pickups enable row level security;

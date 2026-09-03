@@ -10,6 +10,8 @@ import {
   MapPin,
   CreditCard,
   BarChart3,
+  Eye,
+  MousePointerClick,
 } from "lucide-react";
 
 export default async function AnalyticsPage() {
@@ -35,10 +37,18 @@ export default async function AnalyticsPage() {
   const maxRevenue = Math.max(...analytics.dailyRevenue.map((d) => d.revenue), 1);
   const maxStatus = Math.max(...analytics.statusBreakdown.map((s) => s.count), 1);
   const maxPayment = Math.max(...analytics.paymentBreakdown.map((p) => p.count), 1);
+  const maxTraffic = Math.max(
+    ...analytics.dailyTraffic.map((day) => day.pageViews),
+    1,
+  );
   const repeatRate =
     analytics.totalCustomers > 0
       ? Math.round((analytics.repeatCustomers / analytics.totalCustomers) * 100)
       : 0;
+  const visitorConversion =
+    analytics.visitorsMonth > 0
+      ? ((analytics.ordersMonth / analytics.visitorsMonth) * 100).toFixed(1)
+      : "0.0";
 
   const kpis = [
     {
@@ -79,6 +89,37 @@ export default async function AnalyticsPage() {
     },
   ];
 
+  const trafficKpis = [
+    {
+      Icon: Users,
+      label: ar ? "زوار اليوم" : "Visitors today",
+      value: String(analytics.visitorsToday),
+      hint: ar ? "زوار مميزون" : "Unique visitors",
+      color: "text-sky-600",
+    },
+    {
+      Icon: Users,
+      label: ar ? "زوار هذا الشهر" : "Visitors this month",
+      value: String(analytics.visitorsMonth),
+      hint: ar ? `الإجمالي: ${analytics.visitorsTotal}` : `All time: ${analytics.visitorsTotal}`,
+      color: "text-violet-600",
+    },
+    {
+      Icon: Eye,
+      label: ar ? "مشاهدات اليوم" : "Page views today",
+      value: String(analytics.pageViewsToday),
+      hint: ar ? "زيارات الصفحات" : "Page visits",
+      color: "text-brand",
+    },
+    {
+      Icon: MousePointerClick,
+      label: ar ? "بدء الدفع هذا الشهر" : "Checkout starts",
+      value: String(analytics.checkoutStartsMonth),
+      hint: ar ? `إضافة للسلة: ${analytics.addToCartsMonth}` : `Added to cart: ${analytics.addToCartsMonth}`,
+      color: "text-emerald-600",
+    },
+  ];
+
   const statusColors: Record<string, string> = {
     delivered: "bg-emerald-500",
     shipped: "bg-sky-500",
@@ -101,8 +142,118 @@ export default async function AnalyticsPage() {
         </p>
       </div>
 
+      <section aria-labelledby="traffic-heading">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 id="traffic-heading" className="font-heading text-lg font-bold text-fg">
+              {ar ? "حركة الموقع" : "Website traffic"}
+            </h2>
+            <p className="mt-1 text-sm text-fg-dim">
+              {ar
+                ? "زيارات مجهولة المصدر وسلوك التسوق من آخر 30 يومًا"
+                : "Anonymous visits and shopping activity from the last 30 days"}
+            </p>
+          </div>
+          <p className="text-sm font-medium text-fg-muted">
+            {ar ? "تحويل الزوار هذا الشهر: " : "Visitor conversion this month: "}
+            <span className="font-semibold text-brand">{visitorConversion}%</span>
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {trafficKpis.map((kpi) => (
+            <div key={kpi.label} className="glass p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-fg-muted">{kpi.label}</p>
+                <kpi.Icon size={17} className={kpi.color} />
+              </div>
+              <p className="mt-3 font-heading text-3xl font-bold tabular-nums text-fg">
+                {kpi.value}
+              </p>
+              <p className="mt-1 text-xs text-fg-dim">{kpi.hint}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(18rem,1fr)]">
+          <div className="glass p-5">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-fg">
+                  {ar ? "نشاط الزوار" : "Visitor activity"}
+                </h3>
+                <p className="mt-0.5 text-xs text-fg-dim">
+                  {ar ? "مشاهدات الصفحات يوميًا" : "Daily page views"}
+                </p>
+              </div>
+              <span className="pill pill-neutral">30 {ar ? "يوم" : "days"}</span>
+            </div>
+            <div className="flex h-36 items-end gap-1" role="img" aria-label={ar ? "مخطط مشاهدات الصفحات اليومية" : "Daily page views chart"}>
+              {analytics.dailyTraffic.map((day) => (
+                <div key={day.date} className="group flex h-full min-w-0 flex-1 items-end" title={`${day.date}: ${day.visitors} ${ar ? "زائر" : "visitors"} · ${day.pageViews} ${ar ? "مشاهدة" : "views"}`}>
+                  <div
+                    className="w-full rounded-t bg-brand/80 transition-colors duration-200 group-hover:bg-brand"
+                    style={{
+                      height: `${(day.pageViews / maxTraffic) * 100}%`,
+                      minHeight: day.pageViews > 0 ? "3px" : "0",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between text-[10px] text-fg-dim">
+              {analytics.dailyTraffic.filter((_, index) => index % 5 === 0).map((day) => (
+                <span key={day.date}>{day.date}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass p-5">
+            <h3 className="font-semibold text-fg">
+              {ar ? "مسار الشراء هذا الشهر" : "Purchase path this month"}
+            </h3>
+            <div className="mt-4 divide-y divide-border">
+              {[
+                [ar ? "زوار مميزون" : "Unique visitors", analytics.visitorsMonth],
+                [ar ? "إضافة إلى السلة" : "Added to cart", analytics.addToCartsMonth],
+                [ar ? "بدء الدفع" : "Checkout starts", analytics.checkoutStartsMonth],
+                [ar ? "طلبات" : "Orders", analytics.ordersMonth],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="flex items-center justify-between py-3 text-sm">
+                  <span className="text-fg-muted">{label}</span>
+                  <span className="font-semibold tabular-nums text-fg">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass mt-4 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4">
+            <div>
+              <h3 className="font-semibold text-fg">{ar ? "أكثر الصفحات زيارة" : "Most visited pages"}</h3>
+              <p className="mt-0.5 text-xs text-fg-dim">{ar ? "آخر 30 يومًا" : "Last 30 days"}</p>
+            </div>
+          </div>
+          {analytics.popularPages.length === 0 ? (
+            <p className="border-t border-border px-5 py-5 text-sm text-fg-dim">
+              {ar ? "ستظهر بيانات الزيارات هنا بعد أول زيارة للموقع." : "Visit data will appear here after the first website visit."}
+            </p>
+          ) : (
+            <div className="border-t border-border">
+              {analytics.popularPages.map((page) => (
+                <div key={page.path} className="flex items-center justify-between gap-4 px-5 py-3 text-sm">
+                  <code className="min-w-0 truncate text-fg-muted">{page.path}</code>
+                  <span className="shrink-0 font-semibold tabular-nums text-fg">{page.views} {ar ? "مشاهدة" : "views"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="glass p-5">
             <div className="flex items-center justify-between">

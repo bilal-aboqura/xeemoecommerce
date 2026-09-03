@@ -36,6 +36,15 @@ export interface AnalyticsData {
   totalCustomers: number;
   repeatCustomers: number;
   newCustomersThisMonth: number;
+
+  visitorsToday: number;
+  visitorsMonth: number;
+  visitorsTotal: number;
+  pageViewsToday: number;
+  addToCartsMonth: number;
+  checkoutStartsMonth: number;
+  dailyTraffic: { date: string; visitors: number; pageViews: number }[];
+  popularPages: { path: string; views: number }[];
 }
 
 function startOfDay(): string {
@@ -82,7 +91,7 @@ export async function getAnalytics(): Promise<AnalyticsData | null> {
   const supabase = getSupabaseServiceClient();
   if (!supabase) return null;
 
-  const [ordersRes, itemsRes] = await Promise.all([
+  const [ordersRes, itemsRes, eventsRes] = await Promise.all([
     supabase
       .from("orders")
       .select(
@@ -91,10 +100,14 @@ export async function getAnalytics(): Promise<AnalyticsData | null> {
     supabase
       .from("order_items")
       .select("name_en, name_ar, price, quantity, order_id"),
+    supabase
+      .from("store_events")
+      .select("visitor_id, event_type, path, created_at"),
   ]);
 
   const orders = ordersRes.data ?? [];
   const items = itemsRes.data ?? [];
+  const events = eventsRes.data ?? [];
 
   const todayISO = startOfDay();
   const weekISO = startOfWeek();
@@ -237,6 +250,53 @@ export async function getAnalytics(): Promise<AnalyticsData | null> {
     if (firstOrder >= monthISO) newCustomersThisMonth++;
   }
 
+  const todayEvents = events.filter((event) => event.created_at >= todayISO);
+  const monthEvents = events.filter((event) => event.created_at >= monthISO);
+  const uniqueVisitors = (collection: typeof events) =>
+    new Set(collection.map((event) => event.visitor_id)).size;
+
+  const visitorsToday = uniqueVisitors(todayEvents);
+  const visitorsMonth = uniqueVisitors(monthEvents);
+  const visitorsTotal = uniqueVisitors(events);
+  const pageViewsToday = todayEvents.filter(
+    (event) => event.event_type === "page_view",
+  ).length;
+  const addToCartsMonth = monthEvents.filter(
+    (event) => event.event_type === "add_to_cart",
+  ).length;
+  const checkoutStartsMonth = monthEvents.filter(
+    (event) => event.event_type === "initiate_checkout",
+  ).length;
+
+  const trafficMap = new Map<string, { visitors: Set<string>; pageViews: number }>();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    trafficMap.set(formatDateLabel(d), { visitors: new Set(), pageViews: 0 });
+  }
+  for (const event of events) {
+    if (event.created_at < thirtyDaysISO) continue;
+    const entry = trafficMap.get(dateKey(event.created_at));
+    if (!entry) continue;
+    entry.visitors.add(event.visitor_id);
+    if (event.event_type === "page_view") entry.pageViews++;
+  }
+  const dailyTraffic = Array.from(trafficMap.entries()).map(([date, value]) => ({
+    date,
+    visitors: value.visitors.size,
+    pageViews: value.pageViews,
+  }));
+
+  const pageMap = new Map<string, number>();
+  for (const event of monthEvents) {
+    if (event.event_type !== "page_view") continue;
+    pageMap.set(event.path, (pageMap.get(event.path) ?? 0) + 1);
+  }
+  const popularPages = Array.from(pageMap.entries())
+    .map(([path, views]) => ({ path, views }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 5);
+
   return {
     revenueToday,
     revenueWeek,
@@ -255,5 +315,13 @@ export async function getAnalytics(): Promise<AnalyticsData | null> {
     totalCustomers,
     repeatCustomers,
     newCustomersThisMonth,
+    visitorsToday,
+    visitorsMonth,
+    visitorsTotal,
+    pageViewsToday,
+    addToCartsMonth,
+    checkoutStartsMonth,
+    dailyTraffic,
+    popularPages,
   };
 }
