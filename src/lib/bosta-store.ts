@@ -10,7 +10,7 @@ import {
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 
 const BOSTA_ORDER_SELECT =
-  "id, order_number, customer_name, customer_phone, alt_phone, governorate, city, address, notes, items_total, grand_total, payment_method, payment_status, fulfillment_status, bosta, order_items(name_en, name_ar, quantity)";
+  "id, order_number, customer_name, customer_phone, alt_phone, governorate, city, address, notes, items_total, grand_total, payment_method, payment_status, fulfillment_status, bosta, mylerz, order_items(name_en, name_ar, quantity)";
 
 function asOrder(value: unknown) {
   return value as BostaOrder;
@@ -80,9 +80,12 @@ export async function storeBostaShipment(order: BostaOrder, shipment: BostaShipm
         : {}),
     })
     .eq("id", order.id)
+    .is("mylerz", null)
+    .or("shipment_creation.is.null,shipment_creation.eq.bosta")
     .select(BOSTA_ORDER_SELECT)
     .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("Order is missing or linked to Mylerz");
   return data ? asOrder(data) : null;
 }
 
@@ -144,7 +147,7 @@ export async function importExistingBostaDeliveries() {
       unmatchedTrackingNumbers.push(trackingNumber);
       continue;
     }
-    if (order.bosta?.trackingNumber && order.bosta.trackingNumber !== trackingNumber) {
+    if (order.mylerz?.trackingNumber || (order.bosta?.trackingNumber && order.bosta.trackingNumber !== trackingNumber)) {
       conflicts.push(trackingNumber);
       continue;
     }

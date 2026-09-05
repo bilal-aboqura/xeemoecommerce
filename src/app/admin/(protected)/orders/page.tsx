@@ -1,3 +1,5 @@
+import { getMylerzConfiguration } from "@/lib/mylerz";
+import { MylerzConnection } from "@/components/admin/mylerz-shipment-panel";
 import { adminListOrders } from "@/lib/data/admin-crud";
 import { getLang } from "@/lib/i18n/server";
 import { OrdersTable } from "@/components/admin/orders-table";
@@ -22,12 +24,13 @@ export default async function AdminOrdersPage() {
         title={ar ? "الطلبات" : "Orders"}
         description={
           ar
-            ? "حدّث حالات الدفع والتجهيز بسرعة من الجدول نفسه."
-            : "Update payment and fulfillment status quickly from the table itself."
+            ? "ابحث عن الطلبات وتابع الدفع والتجهيز والشحن من مكان واحد."
+            : "Search orders and manage payment, fulfillment, and shipping in one place."
         }
       />
       <BostaOperations configured={bostaConfigured} pickups={pickups} lang={lang} />
-      <OrdersTable orders={orders} lang={lang} />
+      <MylerzConnection configured={getMylerzConfiguration().ready} lang={lang} />
+      <OrdersTable orders={orders} lang={lang} mylerzConfigured={getMylerzConfiguration().ready} bostaConfigured={bostaConfigured} />
     </div>
   );
 }

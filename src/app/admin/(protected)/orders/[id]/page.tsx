@@ -1,3 +1,6 @@
+import { OrderNotesEditor } from "@/components/admin/order-notes-editor";
+import { getMylerzConfiguration } from "@/lib/mylerz";
+import { MylerzShipmentPanel } from "@/components/admin/mylerz-shipment-panel";
 import { adminGetOrder, adminListProducts } from "@/lib/data/admin-crud";
 import { OrderItemsEditor } from "@/components/admin/order-items-editor";
 import { BostaShipmentPanel } from "@/components/admin/bosta-shipment-panel";
@@ -165,22 +168,17 @@ export default async function OrderDetailPage({
             </div>
           </div>
 
+          <MylerzShipmentPanel orderId={order.id} initialShipment={order.mylerz ?? null} configured={getMylerzConfiguration().ready} blocked={Boolean(order.bosta)} lang={lang} />
           <BostaShipmentPanel
             orderId={order.id}
             initialShipment={(order.bosta as BostaShipment | null) ?? null}
-            configured={bostaConfigured}
+            configured={bostaConfigured} blocked={Boolean(order.mylerz)}
             lang={lang}
           />
 
-          {/* Notes */}
-          {order.notes && (
-            <div className="glass-elevated p-5">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-fg-muted">
-                {ar ? "ملاحظات" : "Notes"}
-              </p>
-              <p className="text-sm text-fg">{order.notes}</p>
-            </div>
-          )}
+          <div className="rounded-xl border border-border bg-white p-5">
+            <OrderNotesEditor key={`${order.id}:${order.notes ?? ""}`} orderId={order.id} initialNotes={order.notes ?? null} lang={lang} />
+          </div>
         </div>
       </div>
     </div>

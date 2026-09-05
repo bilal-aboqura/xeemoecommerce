@@ -12,11 +12,13 @@ export function BostaShipmentPanel({
   orderId,
   initialShipment,
   configured,
+  blocked = false,
   lang,
 }: {
   orderId: string;
   initialShipment: BostaShipment | null;
   configured: boolean;
+  blocked?: boolean;
   lang: "en" | "ar";
 }) {
   const ar = lang === "ar";
@@ -67,6 +69,7 @@ export function BostaShipmentPanel({
         ) : null}
       </div>
 
+      {blocked && !shipment ? <p className="mt-3 text-sm text-fg-dim">{ar ? "الطلب مربوط بشحنة Mylerz بالفعل." : "This order already has a Mylerz shipment."}</p> : null}
       {!configured ? (
         <p className="mt-4 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800">
           {ar ? "أضف BOSTA_API_KEY وBOSTA_WEBHOOK_SECRET ورابط الموقع العام لتفعيل الربط." : "Add BOSTA_API_KEY, BOSTA_WEBHOOK_SECRET, and the public site URL to activate Bosta."}
@@ -108,7 +111,7 @@ export function BostaShipmentPanel({
       <div className="mt-5 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={loading || !configured}
+          disabled={loading || !configured || (blocked && !shipment)}
           onClick={() => void runAction(shipment ? "sync" : "create")}
           className="btn btn-primary px-4"
         >

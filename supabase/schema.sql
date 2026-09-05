@@ -407,3 +407,9 @@ revoke all on public.bosta_pickups from anon, authenticated;
 grant all on public.bosta_pickups to service_role;
 
 notify pgrst, 'reload schema';
+
+alter table public.orders add column if not exists mylerz jsonb;
+create unique index if not exists orders_mylerz_tracking_idx
+  on public.orders ((mylerz ->> 'trackingNumber'))
+  where mylerz ->> 'trackingNumber' is not null;
+alter table public.orders add column if not exists shipment_creation text;

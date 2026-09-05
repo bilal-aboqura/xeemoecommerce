@@ -48,6 +48,8 @@ export interface BostaOrder {
   payment_method: "card" | "cod";
   fulfillment_status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   bosta: BostaShipment | null;
+  mylerz: import("@/lib/mylerz").MylerzShipment | null;
+  payment_status: string;
   order_items: Array<{
     name_en: string;
     name_ar: string | null;
@@ -394,6 +396,7 @@ function shipmentFromDelivery(delivery: BostaDeliveryData, existing?: BostaShipm
 }
 
 export async function createBostaDelivery(order: BostaOrder) {
+  if (order.mylerz?.trackingNumber) throw new BostaIntegrationError("الطلب مربوط بشحنة Mylerz بالفعل.", 409);
   if (order.bosta?.trackingNumber) {
     throw new BostaIntegrationError("الطلب مربوط بشحنة Bosta بالفعل.", 409);
   }

@@ -69,6 +69,11 @@ export interface AdminOrder {
   payment_status: string;
   fulfillment_status: string;
   bosta: BostaShipment | null;
+  mylerz: import("@/lib/mylerz").MylerzShipment | null;
+  address: string;
+  notes: string | null;
+  alt_phone: string | null;
+  order_items: { id: string; name_en: string; name_ar: string | null; quantity: number; price: number }[];
   created_at: string;
 }
 
@@ -78,7 +83,7 @@ export async function adminListOrders(limit = 100): Promise<AdminOrder[]> {
   const { data, error } = await sb
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, governorate, city, items_total, shipping_cost, discount, grand_total, payment_method, payment_status, fulfillment_status, bosta, created_at",
+      "id, order_number, customer_name, customer_phone, governorate, city, items_total, shipping_cost, discount, grand_total, payment_method, payment_status, fulfillment_status, bosta, mylerz, address, notes, alt_phone, order_items(id, name_en, name_ar, quantity, price), created_at",
     )
     .order("created_at", { ascending: false })
     .limit(limit);

@@ -53,3 +53,27 @@ To achieve this level of quality, we utilized the absolute latest in web technol
 <div align="center">
   <sub>Designed and developed for <strong>Xeemo Egypt</strong>. Delivering excellence in every pixel. 🚀</sub>
 </div>
+
+
+### Mylerz shipping
+
+Set `MYLERZ_USERNAME` and `MYLERZ_PASSWORD` on the server. Optional settings:
+`MYLERZ_API_URL` (defaults to `https://integration.mylerz.net`),
+`MYLERZ_WAREHOUSE_NAME`, and `MYLERZ_DEFAULT_WEIGHT_KG` (defaults to 1 kg per package).
+Never expose these values through `NEXT_PUBLIC_` variables.
+
+Apply the additive migration with `node --env-file=.env.local scripts/migrate-mylerz.mjs`.
+The full schema also includes these additions. Configure the same variables in the
+hosting environment before deploying; `.env.local` is not committed.
+
+Admin orders supports connection verification, creating shipments, manually syncing
+tracking and downloading PDF waybills. Only a confirmed delivered status marks COD
+as paid. Failed delivery and “out for delivery” do not count as delivered.
+
+Shipment creation claims an order atomically across both carriers. If the carrier
+request times out or saving its response fails, creation stays blocked to prevent
+accidental duplicate shipments. Reconcile the order reference in the carrier account
+and persist any existing shipment before clearing `orders.shipment_creation` for that
+specific order. Do not clear the claim until the carrier outcome is known.
+
+Run `node scripts/test-mylerz.mjs` for mocked integration checks; it creates no live shipments.
