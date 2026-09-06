@@ -37,6 +37,16 @@ interface BumpProduct {
   stock: number;
 }
 
+const PHONE_PATTERN = /^\d{6,20}$/;
+
+function normalizePhone(value: string) {
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+    .replace(/\D/g, "")
+    .slice(0, 20);
+}
+
 export default function CheckoutPage() {
   const { t, lang } = useLang();
   const router = useRouter();
@@ -99,6 +109,7 @@ export default function CheckoutPage() {
   const bumpDesc = bumpProduct
     ? (ar ? bumpProduct.desc_ar : bumpProduct.desc_en) || t.checkout.bumpDesc
     : t.checkout.bumpDesc;
+  const duplicatePhones = Boolean(form.customer_phone && form.alt_phone && form.customer_phone === form.alt_phone);
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) { setForm((f) => ({ ...f, [key]: value })); }
 
@@ -106,6 +117,14 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError(null);
     if (items.length === 0) { setError(ar ? "السلة فارغة." : "Your cart is empty."); return; }
+    if (!PHONE_PATTERN.test(form.customer_phone) || !PHONE_PATTERN.test(form.alt_phone)) {
+      setError(ar ? "أدخل رقمَي هاتف صحيحين بالأرقام فقط." : "Enter two valid phone numbers using digits only.");
+      return;
+    }
+    if (duplicatePhones) {
+      setError(ar ? "رقم الهاتف البديل يجب أن يختلف عن رقم الهاتف الأساسي." : "The alternative phone number must be different from the main phone number.");
+      return;
+    }
     setSubmitting(true);
     try {
       const orderItems = items.map((i) => ({ product_id: i.id, name_en: i.name_en, name_ar: i.name_ar, price: i.price, quantity: i.quantity, image: i.image }));
@@ -184,12 +203,13 @@ export default function CheckoutPage() {
                 <input required value={form.customer_name} onChange={(e) => set("customer_name", e.target.value)} className="input" placeholder={ar ? "محمد أحمد" : "Mohamed Ahmed"} />
               </Field>
               <Field label={t.checkout.phone}>
-                <input required type="tel" dir="ltr" value={form.customer_phone} onChange={(e) => set("customer_phone", e.target.value)} className="input" placeholder="01XXXXXXXXX" />
+                <input required type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={20} dir="ltr" value={form.customer_phone} onChange={(e) => set("customer_phone", normalizePhone(e.target.value))} className="input" placeholder="01XXXXXXXXX" aria-invalid={duplicatePhones} aria-describedby={duplicatePhones ? "phone-duplicate-error" : undefined} />
               </Field>
 
               <Field label={t.checkout.altPhone}>
-                <input required type="tel" dir="ltr" value={form.alt_phone} onChange={(e) => set("alt_phone", e.target.value)} className="input" placeholder="01XXXXXXXXX" />
+                <input required type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={20} dir="ltr" value={form.alt_phone} onChange={(e) => set("alt_phone", normalizePhone(e.target.value))} className="input" placeholder="01XXXXXXXXX" aria-invalid={duplicatePhones} aria-describedby={duplicatePhones ? "phone-duplicate-error" : undefined} />
               </Field>
+              {duplicatePhones && <p id="phone-duplicate-error" className="-mt-2 text-xs text-red-600 sm:col-span-2" role="alert">{ar ? "رقم الهاتف البديل يجب أن يختلف عن رقم الهاتف الأساسي." : "The alternative phone number must be different from the main phone number."}</p>}
 
               <Field label={t.checkout.governorate}>
                 <select required value={form.governorate} onChange={(e) => { set("governorate", e.target.value); set("city", ""); setShipping(null); }} className="input">

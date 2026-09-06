@@ -13,10 +13,18 @@ const ItemSchema = z.object({
   image: z.string().optional(),
 });
 
+const PhoneSchema = z
+  .string()
+  .transform((value) => value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+    .replace(/\D/g, ""))
+  .pipe(z.string().regex(/^\d{6,20}$/, "Phone number must contain 6 to 20 digits."));
+
 const BodySchema = z.object({
   customer_name: z.string().min(2).max(120),
-  customer_phone: z.string().min(6).max(20),
-  alt_phone: z.string().min(6).max(20),
+  customer_phone: PhoneSchema,
+  alt_phone: PhoneSchema,
   governorate: z.string().min(1),
   city: z.string().min(1),
   address: z.string().min(3).max(500),
@@ -24,6 +32,9 @@ const BodySchema = z.object({
   payment_method: z.enum(["card", "cod"]),
   discount_code: z.string().optional().nullable(),
   items: z.array(ItemSchema).min(1),
+}).refine((data) => data.customer_phone !== data.alt_phone, {
+  error: "The alternative phone number must be different from the main phone number.",
+  path: ["alt_phone"],
 });
 
 export async function POST(request: NextRequest) {
