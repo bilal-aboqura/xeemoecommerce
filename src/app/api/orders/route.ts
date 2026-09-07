@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createOrder, getOrderByNumber } from "@/lib/data/orders";
 import { createCheckoutUrl } from "@/lib/kashier";
 import { sendNewOrderNotifications } from "@/lib/notifications";
+import { sendPurchaseOrderToMeta } from "@/lib/meta-conversions";
 
 const ItemSchema = z.object({
   product_id: z.string().uuid(),
@@ -78,7 +79,12 @@ export async function POST(request: NextRequest) {
   if (input.payment_method === "cod") {
     after(async () => {
       const savedOrder = await getOrderByNumber(order.order_number);
-      if (savedOrder) await sendNewOrderNotifications(savedOrder);
+      if (savedOrder) {
+        await Promise.all([
+          sendNewOrderNotifications(savedOrder),
+          sendPurchaseOrderToMeta(savedOrder),
+        ]);
+      }
     });
     return NextResponse.json({
       order_number: order.order_number,

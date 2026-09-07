@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { useLang } from "@/components/language/provider";
 import { cn } from "@/lib/utils";
@@ -27,8 +28,10 @@ function subscribeToViewport(callback: () => void) {
 
 export function WhatsAppFloat() {
   const { lang } = useLang();
+  const pathname = usePathname();
   const ar = lang === "ar";
   const hiddenInHero = useSyncExternalStore(subscribeToViewport, isHeroVisible, () => false);
+  const productPage = pathname.startsWith("/product/");
 
   return (
     <a
@@ -39,6 +42,7 @@ export function WhatsAppFloat() {
       className={cn(
         "wa-float fixed bottom-5 z-50 flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-white shadow-lg shadow-black/30 transition-all hover:scale-105 ltr:right-5 rtl:left-5",
         hiddenInHero && "pointer-events-none translate-y-4 opacity-0",
+        productPage && "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] sm:bottom-5",
       )}
     >
       <MessageCircle size={22} fill="white" strokeWidth={0} />

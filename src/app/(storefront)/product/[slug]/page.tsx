@@ -61,7 +61,7 @@ export default async function ProductPage({
   const name = lang === "ar" ? product.name_ar : product.name_en;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div className="mx-auto max-w-7xl px-4 pb-28 pt-10 sm:py-10">
       <ProductJsonLd slug={slug} />
       {/* Breadcrumb */}
       <nav className="mb-8 text-xs text-fg-dim">

@@ -20,7 +20,7 @@ export function MetaPurchase({ orderNumber, value, contents }: MetaPurchaseProps
       content_type: "product",
       content_ids: contents.map((item) => item.id),
       contents,
-    });
+    }, orderNumber);
     sessionStorage.setItem(key, "1");
   }, [contents, orderNumber, value]);
 

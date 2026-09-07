@@ -24,6 +24,11 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
   const desc = ar ? product.long_desc_ar : product.long_desc_en;
   const image = product.images?.[0] ?? "/images/placeholder.webp";
   const price = Number(product.price);
+  const addButtonContent = out
+    ? t.product.outOfStock
+    : added
+      ? <><CheckCircle size={16} /> {ar ? "تمت الإضافة" : "Added"}</>
+      : <><ShoppingBag size={16} /> {t.product.addToCart}</>;
 
   useEffect(() => {
     trackMetaEvent("ViewContent", productMetaParams({ id: product.id, price }));
@@ -96,7 +101,7 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, product.stock)} />
           <button onClick={handleAdd} disabled={out} className="btn btn-primary gap-2">
-            {added ? <><CheckCircle size={16} /> {ar ? "تمت الإضافة" : "Added"}</> : <><ShoppingBag size={16} /> {t.product.addToCart}</>}
+            {addButtonContent}
           </button>
           <button onClick={buyNow} disabled={out} className="btn btn-secondary gap-2">
             <Zap size={16} />
@@ -116,6 +121,32 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
           </div>
         )}
       </div>
+
+      <aside
+        aria-label={t.product.addToCart}
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-white/95 px-4 pt-3 backdrop-blur-xl sm:hidden"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <div className="min-w-0 shrink-0">
+            <p className="text-xs text-fg-dim">
+              {qty} × {ar ? "قطعة" : "item"}
+            </p>
+            <p className="text-lg font-bold leading-tight text-brand">
+              {formatPrice(price * qty, lang)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={out}
+            className="btn btn-primary min-h-12 min-w-0 flex-1 gap-2 px-4"
+            aria-live="polite"
+          >
+            {addButtonContent}
+          </button>
+        </div>
+      </aside>
     </div>
   );
 }

@@ -16,19 +16,29 @@ export interface MetaPixelContent {
 
 declare global {
   interface Window {
-    fbq?: (action: "track", event: string, params?: MetaPixelParams) => void;
+    fbq?: (
+      action: "track",
+      event: string,
+      params?: MetaPixelParams,
+      options?: { eventID?: string },
+    ) => void;
   }
 }
 
-export function trackMetaEvent(event: string, params?: MetaPixelParams) {
+export function trackMetaEvent(
+  event: string,
+  params?: MetaPixelParams,
+  eventId?: string,
+) {
+  const options = eventId ? { eventID: eventId } : undefined;
   if (window.fbq) {
-    window.fbq("track", event, params);
+    window.fbq("track", event, params, options);
     return;
   }
 
   window.addEventListener(
     "meta-pixel-ready",
-    () => window.fbq?.("track", event, params),
+    () => window.fbq?.("track", event, params, options),
     { once: true },
   );
 }

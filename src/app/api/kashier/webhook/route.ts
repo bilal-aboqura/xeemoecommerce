@@ -3,6 +3,7 @@ import { verifyWebhookSignature, extractWebhookResult } from "@/lib/kashier";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { getOrderByNumber } from "@/lib/data/orders";
 import { sendNewOrderNotifications } from "@/lib/notifications";
+import { sendPurchaseOrderToMeta } from "@/lib/meta-conversions";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -54,7 +55,12 @@ export async function POST(request: NextRequest) {
   if (isSuccess && updatedOrders?.length) {
     after(async () => {
       const order = await getOrderByNumber(result.orderId);
-      if (order) await sendNewOrderNotifications(order);
+      if (order) {
+        await Promise.all([
+          sendNewOrderNotifications(order),
+          sendPurchaseOrderToMeta(order),
+        ]);
+      }
     });
   }
 
