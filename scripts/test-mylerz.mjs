@@ -35,4 +35,5 @@ await assert.rejects(api.createMylerzShipment({...order,fulfillment_status:'canc
 assert.equal(calls.length,before);
 assert.equal(api.orderStatusForMylerzStatus('Out for delivery','processing'),'shipped');
 assert.equal(api.orderStatusForMylerzStatus('Undelivered','shipped'),'shipped');
+assert.equal(api.orderStatusForMylerzStatus('Out for delivery','delivered'),'delivered');
 console.log('Mylerz checks passed: payload, COD/prepaid, phones, destinations, duplicate guards, unpaid/cancelled orders, and delivery-state mapping.');

@@ -255,6 +255,7 @@ export function orderStatusForMylerzStatus(
   status: string,
   current: OrderStatus,
 ): OrderStatus {
+  if (["delivered", "cancelled"].includes(current)) return current;
   const kind = mylerzStatusKind(status);
   if (kind === "delivered") return "delivered";
   if (kind === "cancelled") return "cancelled";

@@ -144,6 +144,15 @@ CRON_TZ=Africa/Cairo
 0 0 * * * curl -fsS -H "Authorization: Bearer REPLACE_WITH_CRON_SECRET" https://xeemo-eg.com/api/cron/bosta-pickup/daily >/dev/null
 ```
 
+5. Schedule a status refresh every 15 minutes. Bosta webhooks update orders
+immediately; this job is a fallback and also keeps Mylerz shipments synchronized.
+An in-transit shipment sets the order to `shipped`; a delivered shipment sets it
+to `delivered` and marks COD as paid.
+
+```cron
+*/15 * * * * curl -fsS -H "Authorization: Bearer REPLACE_WITH_CRON_SECRET" https://xeemo-eg.com/api/cron/shipment-status/quarter-hour >/dev/null
+```
+
 Admins can create or refresh a shipment and download its AWB from the order
 details page. The orders page also supports importing existing Bosta shipments
 and manually running the pickup workflow.
