@@ -126,6 +126,7 @@ export default async function AnalyticsPage() {
     processing: "bg-amber-500",
     pending: "bg-amber-400",
     cancelled: "bg-red-500",
+    returned: "bg-orange-500",
     refunded: "bg-zinc-500",
   };
 

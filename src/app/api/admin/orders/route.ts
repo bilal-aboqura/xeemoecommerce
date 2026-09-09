@@ -9,7 +9,7 @@ const Schema = z.object({
   notes: z.string().trim().max(5000).nullable().optional(),
   payment_status: z.enum(["pending", "paid", "failed", "refunded"]).optional(),
   fulfillment_status: z
-    .enum(["pending", "processing", "shipped", "delivered", "cancelled"])
+    .enum(["pending", "processing", "shipped", "delivered", "cancelled", "returned"])
     .optional(),
 });
 

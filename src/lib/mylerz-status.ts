@@ -7,8 +7,8 @@ export function mylerzStatusKind(status: string) {
     )
   )
     return "delivered";
-  if (/return|fail|undeliver|not deliver|تعذر|مرتجع|لم يتم/.test(value))
-    return "exception";
+  if (/return|fail|undeliver|not deliver|refus|تعذر|مرتجع|لم يتم|رفض/.test(value))
+    return "returned";
   if (/out for|transit|picked|قيد التوصيل/.test(value)) return "shipped";
   return "processing";
 }
@@ -17,10 +17,7 @@ export function mylerzStatusLabel(status: string, lang: "ar" | "en" = "ar") {
   const labels = {
     delivered: { ar: "تم التسليم", en: "Delivered" },
     cancelled: { ar: "ملغي", en: "Cancelled" },
-    exception: {
-      ar: "تعذر التسليم / مرتجع",
-      en: "Delivery exception / return",
-    },
+    returned: { ar: "مرتجع", en: "Returned" },
     shipped: { ar: "قيد التوصيل", en: "In transit" },
     processing: { ar: "قيد التجهيز", en: "Processing" },
   };

@@ -19,6 +19,7 @@ const FULFILLMENT_OPTIONS = [
   "shipped",
   "delivered",
   "cancelled",
+  "returned",
 ] as const;
 
 const paymentLabel: Record<string, Record<"en" | "ar", string>> = {
@@ -30,10 +31,11 @@ const paymentLabel: Record<string, Record<"en" | "ar", string>> = {
 
 const fulfillmentLabel: Record<string, Record<"en" | "ar", string>> = {
   pending: { en: "Pending", ar: "قيد الانتظار" },
-  processing: { en: "Processing", ar: "قيد التجهيز" },
-  shipped: { en: "Shipped", ar: "تم الشحن" },
+  processing: { en: "Confirmed", ar: "تم التأكيد" },
+  shipped: { en: "In shipping", ar: "جاري الشحن" },
   delivered: { en: "Delivered", ar: "تم التوصيل" },
   cancelled: { en: "Cancelled", ar: "ملغي" },
+  returned: { en: "Returned", ar: "مرتجع" },
 };
 
 const fulfillmentPillColor: Record<string, string> = {
@@ -42,6 +44,7 @@ const fulfillmentPillColor: Record<string, string> = {
   shipped: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700",
   delivered: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700",
   cancelled: "border-red-500/30 bg-red-500/10 text-red-700",
+  returned: "border-orange-500/30 bg-orange-500/10 text-orange-800",
 };
 
 type StatusOverrides = Record<

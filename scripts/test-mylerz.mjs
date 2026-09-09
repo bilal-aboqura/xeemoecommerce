@@ -10,6 +10,7 @@ function compile(file, dependencies, globals = {}) {
 }
 const statuses = compile('src/lib/mylerz-status.ts', {});
 for (const status of ['Out for delivery', 'Delivery failed', 'Undelivered', 'Returned', 'Not delivered']) assert.notEqual(statuses.mylerzStatusKind(status), 'delivered');
+assert.equal(statuses.mylerzStatusKind('Received at Destination HUB - Undelivered (Customer refused)'), 'returned');
 assert.equal(statuses.mylerzStatusKind('Delivered'), 'delivered');
 assert.equal(statuses.mylerzStatusKind('Confirmed Delivered'), 'delivered');
 assert.equal(statuses.mylerzStatusKind('تم تأكيد تسليم الشحنة'), 'delivered');
@@ -36,6 +37,7 @@ await assert.rejects(api.createMylerzShipment({...order,payment_method:'card',pa
 await assert.rejects(api.createMylerzShipment({...order,fulfillment_status:'cancelled'}));
 assert.equal(calls.length,before);
 assert.equal(api.orderStatusForMylerzStatus('Out for delivery','processing'),'shipped');
-assert.equal(api.orderStatusForMylerzStatus('Undelivered','shipped'),'shipped');
+assert.equal(api.orderStatusForMylerzStatus('Undelivered','shipped'),'returned');
+assert.equal(api.orderStatusForMylerzStatus('Received at Destination HUB - Undelivered (Customer refused)','shipped'),'returned');
 assert.equal(api.orderStatusForMylerzStatus('Out for delivery','delivered'),'delivered');
 console.log('Mylerz checks passed: payload, COD/prepaid, phones, destinations, duplicate guards, unpaid/cancelled orders, and delivery-state mapping.');

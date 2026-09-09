@@ -46,7 +46,7 @@ export interface BostaOrder {
   items_total: number;
   grand_total: number;
   payment_method: "card" | "cod";
-  fulfillment_status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  fulfillment_status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "returned";
   bosta: BostaShipment | null;
   mylerz: import("@/lib/mylerz").MylerzShipment | null;
   payment_status: string;
@@ -478,10 +478,11 @@ export function fulfillmentStatusForBostaState(
   current: BostaOrder["fulfillment_status"],
 ): BostaOrder["fulfillment_status"] {
   if (stateCode === 45) return "delivered";
-  if ([46, 48, 49, 60, 100, 101].includes(stateCode)) return "cancelled";
+  if ([46, 60].includes(stateCode)) return "returned";
+  if ([48, 49, 100, 101].includes(stateCode)) return "cancelled";
   if (stateCode === 10) return current === "pending" ? "processing" : current;
   if ([104, 105].includes(stateCode)) return current;
-  return ["delivered", "cancelled"].includes(current) ? current : "shipped";
+  return ["delivered", "cancelled", "returned"].includes(current) ? current : "shipped";
 }
 
 export async function listBostaDeliveriesForImport() {

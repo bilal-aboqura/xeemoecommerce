@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2, RefreshCw } from "lucide-react";
 import type { MylerzShipment } from "@/lib/mylerz";
 import { mylerzStatusLabel } from "@/lib/mylerz-status";
 import { useToast } from "@/components/admin/toast";
@@ -163,11 +164,12 @@ export function MylerzConnection({
   configured: boolean;
   lang: "ar" | "en";
 }) {
-  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const [action, setAction] = useState<"verify" | "sync" | null>(null);
   const [message, setMessage] = useState("");
   const ar = lang === "ar";
   async function verify() {
-    setBusy(true);
+    setAction("verify");
     try {
       const response = await fetch("/api/admin/orders/mylerz", {
         method: "POST",
@@ -184,7 +186,25 @@ export function MylerzConnection({
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Connection failed");
     } finally {
-      setBusy(false);
+      setAction(null);
+    }
+  }
+  async function sync() {
+    setAction("sync");
+    try {
+      const response = await fetch("/api/admin/orders/mylerz/sync", { method: "POST" });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(result?.error || "Mylerz sync failed");
+      setMessage(
+        ar
+          ? `تمت مزامنة ${result.data.updated} شحنة${result.data.failed ? `، وتعذر تحديث ${result.data.failed}` : ""}.`
+          : `${result.data.updated} shipments synchronized${result.data.failed ? `; ${result.data.failed} failed` : ""}.`,
+      );
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Mylerz sync failed");
+    } finally {
+      setAction(null);
     }
   }
   return (
@@ -199,14 +219,26 @@ export function MylerzConnection({
             ? "بانتظار بيانات الحساب"
             : "Account configuration required"}
       </span>
+      <div className="ms-auto flex flex-wrap gap-2">
       <button
         type="button"
-        disabled={!configured || busy}
+        disabled={!configured || action !== null}
         onClick={verify}
-        className="ms-auto rounded-lg border border-border px-3 py-2 disabled:opacity-50"
+        className="btn btn-secondary px-3"
       >
-        {busy ? "…" : ar ? "اختبار الاتصال" : "Test connection"}
+        {action === "verify" ? <Loader2 size={16} className="animate-spin" /> : null}
+        {ar ? "اختبار الاتصال" : "Test connection"}
       </button>
+      <button
+        type="button"
+        disabled={!configured || action !== null}
+        onClick={sync}
+        className="btn btn-primary px-3"
+      >
+        {action === "sync" ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+        {ar ? "مزامنة شحنات Mylerz" : "Sync Mylerz shipments"}
+      </button>
+      </div>
       <p role="status" className="w-full empty:hidden">
         {message}
       </p>

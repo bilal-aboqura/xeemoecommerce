@@ -131,7 +131,7 @@ create table if not exists public.orders (
   payment_status    text not null default 'pending'
                     check (payment_status in ('pending','paid','failed','refunded')),
   fulfillment_status text not null default 'pending'
-                    check (fulfillment_status in ('pending','processing','shipped','delivered','cancelled')),
+                    check (fulfillment_status in ('pending','processing','shipped','delivered','cancelled','returned')),
   kashier_payment_id text,
   discount_code     text,
   bosta              jsonb,
@@ -141,6 +141,9 @@ create table if not exists public.orders (
 create index if not exists orders_created_idx on public.orders(created_at desc);
 create index if not exists orders_user_idx     on public.orders(user_id);
 alter table public.orders add column if not exists bosta jsonb;
+alter table public.orders drop constraint if exists orders_fulfillment_status_check;
+alter table public.orders add constraint orders_fulfillment_status_check
+  check (fulfillment_status in ('pending','processing','shipped','delivered','cancelled','returned'));
 update public.orders set alt_phone = customer_phone where alt_phone is null;
 alter table public.orders alter column alt_phone set not null;
 create unique index if not exists orders_bosta_tracking_idx

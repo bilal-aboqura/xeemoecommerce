@@ -194,6 +194,7 @@ function StatusPill({ value }: { value: string }) {
     shipped: "pill-info",
     processing: "pill-warning",
     cancelled: "pill-danger",
+    returned: "pill-danger",
     refunded: "pill-neutral",
   };
   return <span className={`pill ${cls[value] ?? "pill-neutral"}`}>{value}</span>;

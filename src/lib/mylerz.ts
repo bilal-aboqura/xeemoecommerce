@@ -255,10 +255,11 @@ export function orderStatusForMylerzStatus(
   status: string,
   current: OrderStatus,
 ): OrderStatus {
-  if (["delivered", "cancelled"].includes(current)) return current;
+  if (["delivered", "cancelled", "returned"].includes(current)) return current;
   const kind = mylerzStatusKind(status);
   if (kind === "delivered") return "delivered";
   if (kind === "cancelled") return "cancelled";
+  if (kind === "returned") return "returned";
   if (kind === "shipped") return "shipped";
   return current === "pending" ? "processing" : current;
 }
@@ -287,7 +288,7 @@ export async function createMylerzShipment(
       400,
     );
   }
-  if (["cancelled", "delivered"].includes(order.fulfillment_status))
+  if (["cancelled", "delivered", "returned"].includes(order.fulfillment_status))
     throw new MylerzIntegrationError("لا يمكن شحن طلب ملغي أو مكتمل.", 409);
   if (order.payment_method === "card" && order.payment_status !== "paid")
     throw new MylerzIntegrationError("يجب تأكيد الدفع الإلكتروني أولًا.", 400);

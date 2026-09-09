@@ -171,6 +171,7 @@ function StatusPill({ value }: { value: string }) {
     shipped: "pill-info",
     processing: "pill-warning",
     cancelled: "pill-danger",
+    returned: "pill-danger",
     refunded: "pill-neutral",
   };
 
