@@ -1,6 +1,7 @@
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCheckoutSettings } from "@/lib/data/catalog";
 import { calcItemsSubtotal, calcOnlinePaymentDiscount } from "@/lib/pricing";
+import { is450MlDestination, is450MlProduct } from "@/lib/shipping-policy";
 
 export interface CreateOrderInput {
   customer_name: string;
@@ -42,7 +43,7 @@ export function generateOrderNumber(): string {
 
 export interface ShippingQuote {
   cost: number;
-  matched: "exact" | "governorate" | "default";
+  matched: "exact" | "governorate" | "default" | "450ml";
 }
 
 /** Resolve shipping cost: exact (gov,city) → (gov,'*') → ('*','*'). */
@@ -54,31 +55,59 @@ export async function getShippingCost(
   if (!sb) return { cost: 120, matched: "default" };
 
   // 1) exact
-  let { data } = await sb
+  let { data, error } = await sb
     .from("shipping_rates")
     .select("cost")
     .eq("governorate", governorate)
     .eq("city", city)
     .maybeSingle();
+  if (error) throw error;
   if (data) return { cost: Number(data.cost), matched: "exact" };
 
   // 2) governorate wildcard
-  ({ data } = await sb
+  ({ data, error } = await sb
     .from("shipping_rates")
     .select("cost")
     .eq("governorate", governorate)
     .eq("city", "*")
     .maybeSingle());
+  if (error) throw error;
   if (data) return { cost: Number(data.cost), matched: "governorate" };
 
   // 3) global default
-  ({ data } = await sb
+  ({ data, error } = await sb
     .from("shipping_rates")
     .select("cost")
     .eq("governorate", "*")
     .eq("city", "*")
     .maybeSingle());
+  if (error) throw error;
   return { cost: Number(data?.cost ?? 120), matched: "default" };
+}
+
+export async function getShippingCostForProducts(
+  governorate: string,
+  city: string,
+  productIds: (string | null)[],
+): Promise<ShippingQuote> {
+  const standardShipping = await getShippingCost(governorate, city);
+  if (productIds.some((id) => !id)) return standardShipping;
+  const ids = [...new Set(productIds.filter((id): id is string => Boolean(id)))];
+  if (!ids.length || !is450MlDestination(governorate)) {
+    return standardShipping;
+  }
+  const sb = getSupabaseServiceClient();
+  if (!sb) return standardShipping;
+  const { data, error } = await sb
+    .from("products")
+    .select("id, weight, name_en, name_ar")
+    .in("id", ids);
+  if (error) throw error;
+  if (!data || data.length !== ids.length) throw new Error("Shipping products not found");
+  if (!data.every(is450MlProduct)) {
+    return standardShipping;
+  }
+  return { cost: 80, matched: "450ml" };
 }
 
 /** Look up + validate a discount code; returns the discount amount for a subtotal. */
@@ -126,7 +155,11 @@ export async function createOrder(
     input.payment_method,
   );
   const [shipping, checkoutSettings] = await Promise.all([
-    getShippingCost(input.governorate, input.city),
+    getShippingCostForProducts(
+      input.governorate,
+      input.city,
+      input.items.map((item) => item.product_id),
+    ),
     getCheckoutSettings(),
   ]);
   const shippingCost =

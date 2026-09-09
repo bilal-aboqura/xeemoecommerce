@@ -15,6 +15,7 @@ export interface CartItem {
 
 const KEY = "cart";
 const EVENT = "cart:updated";
+export const CART_ITEM_ADDED_EVENT = "cart:item-added";
 
 // ── Store: keeps localStorage as the source of truth ────────────────────────
 function readAll(): CartItem[] {
@@ -78,16 +79,22 @@ export function useCartCount(): number {
 export function addToCart(
   item: Omit<CartItem, "quantity">,
   quantity = 1,
+  options: { showPrompt?: boolean } = {},
 ): void {
   const items = readAll();
   const existing = items.find((i) => i.id === item.id);
   const cap = item.stock ?? 99;
+  if (cap <= 0 || quantity <= 0) return;
+  const previousQuantity = existing?.quantity ?? 0;
   if (existing) {
     existing.quantity = Math.min((existing.quantity || 0) + quantity, cap);
   } else {
     items.push({ ...item, quantity: Math.min(quantity, cap) });
   }
   commit(items);
+  if (Math.min(previousQuantity + quantity, cap) > previousQuantity && options.showPrompt !== false && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(CART_ITEM_ADDED_EVENT));
+  }
 }
 
 export function updateQuantity(id: string, quantity: number): void {

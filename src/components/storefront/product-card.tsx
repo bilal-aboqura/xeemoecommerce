@@ -15,6 +15,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const image = product.images?.[0] ?? "/images/placeholder.webp";
   const outOfStock = product.stock <= 0;
   const ar = lang === "ar";
+  const price = Number(product.price);
+  const compareAtPrice = Number(product.compare_at_price);
+  const hasSale = Number.isFinite(compareAtPrice) && compareAtPrice > price;
+  const savings = hasSale ? compareAtPrice - price : 0;
+  const discountPercent = hasSale ? Math.round((savings / compareAtPrice) * 100) : 0;
 
   function handleQuickAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -25,13 +30,13 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       slug: product.slug,
       name_en: product.name_en,
       name_ar: product.name_ar,
-      price: Number(product.price),
+      price,
       image,
       stock: product.stock,
     });
     trackMetaEvent("AddToCart", productMetaParams({
       id: product.id,
-      price: Number(product.price),
+      price,
     }));
   }
 
@@ -64,8 +69,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         {!outOfStock && (
           <button
             onClick={handleQuickAdd}
-            className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white opacity-0 shadow-lg shadow-brand/30 transition-all duration-300 hover:bg-brand-dark group-hover:opacity-100"
-            aria-label="Quick add to cart"
+            className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-white transition-opacity duration-200 hover:bg-brand-dark focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100"
+            aria-label={ar ? `أضف ${name} للسلة` : `Add ${name} to cart`}
           >
             <ShoppingBag size={16} />
           </button>
@@ -86,16 +91,20 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         <h3 className="line-clamp-2 text-sm font-medium leading-snug text-fg">
           {name}
         </h3>
-        <div className="mt-auto flex items-baseline gap-2 pt-2">
-          <span className="text-base font-bold text-brand">
-            {formatPrice(Number(product.price), lang)}
+        <div className="mt-auto flex flex-wrap items-baseline gap-2 pt-2">
+          <span className="text-lg font-extrabold text-brand">
+            {formatPrice(price, lang)}
           </span>
-          {product.compare_at_price &&
-            Number(product.compare_at_price) > Number(product.price) && (
+          {hasSale && (
+            <>
               <span className="text-xs text-fg-dim line-through">
-                {formatPrice(Number(product.compare_at_price), lang)}
+                {formatPrice(compareAtPrice, lang)}
               </span>
-            )}
+              <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">
+                {ar ? `وفر ${formatPrice(savings, lang)} · ${discountPercent}%` : `Save ${formatPrice(savings, lang)} · ${discountPercent}%`}
+              </span>
+            </>
+          )}
         </div>
         {/* COD trust badge */}
         <span className="flex items-center gap-1 text-[11px] text-fg-dim">

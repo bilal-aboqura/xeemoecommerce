@@ -22,6 +22,7 @@ import { useCart, clearCart } from "@/lib/cart";
 import { calcItemsSubtotal, calcOnlinePaymentDiscount } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
 import type { GovernorateOption } from "@/lib/data/locations";
+import { useShippingQuote } from "@/components/storefront/use-shipping-quote";
 
 
 interface BumpProduct {
@@ -54,12 +55,12 @@ export default function CheckoutPage() {
   const ar = lang === "ar";
 
   const [governorates, setGovernorates] = useState<GovernorateOption[]>([]);
+  const [checkoutDataError, setCheckoutDataError] = useState(false);
+  const [checkoutDataAttempt, setCheckoutDataAttempt] = useState(0);
   const [form, setForm] = useState({
     customer_name: "", customer_phone: "", alt_phone: "", governorate: "", city: "",
     address: "", notes: "", payment_method: "cod" as "cod" | "card", discount_code: "",
   });
-  const [shipping, setShipping] = useState<number | null>(null);
-  const [shippingLoading, setShippingLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDiscount, setShowDiscount] = useState(false);
@@ -77,35 +78,43 @@ export default function CheckoutPage() {
   );
   const checkoutPayableItemsTotal = checkoutItemsTotal - onlineDiscount;
   const freeShipping = checkoutItemsTotal >= freeShippingThreshold;
+  const shippingProductIds = [
+    ...items.map((item) => item.id),
+    ...(bumpAdded && bumpProduct ? [bumpProduct.id] : []),
+  ];
+  const shippingProductsKey = shippingProductIds.join(",");
+  const { shipping, shippingLoading, shippingError, shippingOffer, retryShipping } =
+    useShippingQuote(form.governorate, form.city, shippingProductsKey);
 
   useEffect(() => {
-    fetch("/api/checkout-data")
-      .then((r) => r.json())
+    let active = true;
+    fetch("/api/checkout-data", { signal: AbortSignal.timeout(15000), cache: "no-store" })
+      .then((r) => { if (!r.ok) throw new Error("Checkout unavailable"); return r.json(); })
       .then((d) => {
+        if (!active) return;
+        const threshold = Number(d.freeShippingThreshold);
+        if (!d.governorates?.length || !Number.isFinite(threshold) || threshold <= 0) throw new Error("Invalid checkout options");
         setGovernorates(d.governorates ?? []);
         if (d.bumpProduct) setBumpProduct(d.bumpProduct);
-        const threshold = Number(d.freeShippingThreshold);
-        if (Number.isFinite(threshold) && threshold > 0) {
-          setFreeShippingThreshold(threshold);
-        }
+        setFreeShippingThreshold(threshold);
+        setCheckoutDataError(false);
       })
-      .catch(() => {});
-  }, []);
-
-  async function fetchShipping(gov: string, city: string) {
-    if (!gov || !city) { setShipping(null); return; }
-    setShippingLoading(true);
-    try {
-      const r = await fetch(`/api/shipping?governorate=${encodeURIComponent(gov)}&city=${encodeURIComponent(city)}`);
-      const d = await r.json();
-      setShipping(Number(d.cost ?? 0));
-    } catch { setShipping(null); }
-    finally { setShippingLoading(false); }
-  }
+      .catch(() => { if (active) setCheckoutDataError(true); });
+    return () => { active = false; };
+  }, [checkoutDataAttempt]);
 
   const hasLocation = Boolean(form.governorate && form.city);
   const effectiveShipping = freeShipping ? 0 : shipping ?? 0;
   const total = checkoutPayableItemsTotal + (hasLocation ? effectiveShipping : 0);
+  const quoteReady = hasLocation && shipping !== null && !shippingLoading && !shippingError;
+  const shippingText = !hasLocation ? (ar ? "اختر المحافظة والمدينة" : "Choose governorate and city")
+    : shippingLoading ? (ar ? "جاري حساب الشحن…" : "Calculating shipping…")
+    : shippingError ? (ar ? "تعذر حساب الشحن" : "Shipping unavailable")
+    : freeShipping ? (ar ? "مجاني" : "Free") : formatPrice(effectiveShipping, lang);
+  const totalText = quoteReady ? formatPrice(total, lang) : (ar ? "بانتظار حساب الشحن" : "Awaiting shipping quote");
+  const submitLabel = form.payment_method === "cod"
+    ? (ar ? "تأكيد الطلب — الدفع عند الاستلام" : "Confirm — pay on delivery")
+    : (ar ? "المتابعة للدفع بالبطاقة" : "Continue to card payment");
   const bumpDesc = bumpProduct
     ? (ar ? bumpProduct.desc_ar : bumpProduct.desc_en) || t.checkout.bumpDesc
     : t.checkout.bumpDesc;
@@ -117,6 +126,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError(null);
     if (items.length === 0) { setError(ar ? "السلة فارغة." : "Your cart is empty."); return; }
+    if (!quoteReady || submitting) return;
     if (!PHONE_PATTERN.test(form.customer_phone) || !PHONE_PATTERN.test(form.alt_phone)) {
       setError(ar ? "أدخل رقمَي هاتف صحيحين بالأرقام فقط." : "Enter two valid phone numbers using digits only.");
       return;
@@ -170,6 +180,8 @@ export default function CheckoutPage() {
       <div className="mt-4 lg:hidden">
         <button
           type="button"
+          aria-expanded={mobileSummaryOpen}
+          aria-controls="mobile-order-items"
           onClick={() => setMobileSummaryOpen((v) => !v)}
           className="glass flex w-full items-center justify-between p-4"
         >
@@ -178,8 +190,15 @@ export default function CheckoutPage() {
           </span>
           {mobileSummaryOpen ? <ChevronUp size={16} className="text-fg-dim" /> : <ChevronDown size={16} className="text-fg-dim" />}
         </button>
+        <dl className="mt-3 space-y-2 rounded-xl bg-surface p-4 text-sm" aria-live="polite">
+          <Row label={t.cart.subtotal} value={formatPrice(subtotal, lang)} />
+          {bumpTotal > 0 && <Row label={ar ? "العرض الإضافي" : "Add-on offer"} value={formatPrice(bumpTotal, lang)} />}
+          {onlineDiscount > 0 && <Row label={ar ? "خصم الدفع الإلكتروني ٥٪" : "Online payment discount 5%"} value={`−${formatPrice(onlineDiscount, lang)}`} />}
+          <Row label={t.cart.shipping} value={shippingText} />
+          <Row label={ar ? "الإجمالي شامل الشحن" : "Total including shipping"} value={totalText} />
+        </dl>
         {mobileSummaryOpen && (
-          <div className="glass mt-1 max-h-48 space-y-2 overflow-y-auto p-4">
+          <div id="mobile-order-items" className="glass mt-1 max-h-48 space-y-2 overflow-y-auto p-4">
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-2 text-xs">
                 <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white">
@@ -191,16 +210,21 @@ export default function CheckoutPage() {
             ))}
           </div>
         )}
+        <Link href="/cart" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline">{ar ? "تعديل المنتجات أو الكمية" : "Edit items or quantities"}</Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 grid gap-8 lg:mt-8 lg:grid-cols-[1fr_380px]">
+      <form onSubmit={handleSubmit} className="mt-6 grid gap-8 [&_input]:text-base [&_select]:text-base [&_textarea]:text-base lg:mt-8 lg:grid-cols-[1fr_380px]">
         {/* Form */}
         <div className="space-y-6">
           <div className="glass p-6">
             <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-fg-muted">{t.checkout.contactInfo}</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {checkoutDataError && <div role="alert" className="text-sm text-red-700 sm:col-span-2">
+                <p>{ar ? "تعذر تحميل مناطق التوصيل. اضغط لإعادة المحاولة." : "Could not load delivery locations. Please try again."}</p>
+                <button type="button" onClick={() => { setCheckoutDataError(false); setCheckoutDataAttempt((value) => value + 1); }} className="btn btn-secondary mt-2">{ar ? "إعادة المحاولة" : "Try again"}</button>
+              </div>}
               <Field label={t.checkout.fullName}>
-                <input required value={form.customer_name} onChange={(e) => set("customer_name", e.target.value)} className="input" placeholder={ar ? "محمد أحمد" : "Mohamed Ahmed"} />
+                <input required autoComplete="name" value={form.customer_name} onChange={(e) => set("customer_name", e.target.value)} className="input" placeholder={ar ? "محمد أحمد" : "Mohamed Ahmed"} />
               </Field>
               <Field label={t.checkout.phone}>
                 <input required type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={20} dir="ltr" value={form.customer_phone} onChange={(e) => set("customer_phone", normalizePhone(e.target.value))} className="input" placeholder="01XXXXXXXXX" aria-invalid={duplicatePhones} aria-describedby={duplicatePhones ? "phone-duplicate-error" : undefined} />
@@ -212,20 +236,30 @@ export default function CheckoutPage() {
               {duplicatePhones && <p id="phone-duplicate-error" className="-mt-2 text-xs text-red-600 sm:col-span-2" role="alert">{ar ? "رقم الهاتف البديل يجب أن يختلف عن رقم الهاتف الأساسي." : "The alternative phone number must be different from the main phone number."}</p>}
 
               <Field label={t.checkout.governorate}>
-                <select required value={form.governorate} onChange={(e) => { set("governorate", e.target.value); set("city", ""); setShipping(null); }} className="input">
+                <select required value={form.governorate} onChange={(e) => { set("governorate", e.target.value); set("city", ""); }} className="input">
                   <option value="">{ar ? "اختر المحافظة" : "Select governorate"}</option>
                   {governorates.map((g) => <option key={g.ar} value={g.ar}>{ar ? g.ar : `${g.en} (${g.ar})`}</option>)}
                 </select>
               </Field>
               <Field label={t.checkout.city}>
-                <select required value={form.city} onChange={(e) => { set("city", e.target.value); void fetchShipping(form.governorate, e.target.value); }} className="input" disabled={!form.governorate}>
+                <select required value={form.city} onChange={(e) => set("city", e.target.value)} className="input" disabled={!form.governorate}>
                   <option value="">{ar ? "اختر المدينة" : "Select city"}</option>
                   {governorates.find((g) => g.ar === form.governorate)?.cities.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </Field>
+              <div className="rounded-xl bg-surface p-4 text-sm sm:col-span-2" aria-live="polite">
+                <p className="flex flex-wrap justify-between gap-2 font-semibold"><span>{t.cart.shipping}</span><span>{shippingText}</span></p>
+                <p className="mt-1 text-fg-muted">
+                  {shippingOffer && !freeShipping && quoteReady
+                    ? (ar ? "شحن ٨٠ ج.م لأن كل منتجات سلتك ٤٥٠ مل. إضافة حجم آخر تعيد سعر الشحن المعتاد." : "EGP 80 shipping for your 450 ml items. Other sizes restore standard shipping.")
+                    : (ar ? "هتعرف الإجمالي شامل الشحن قبل ما تأكد الطلب." : "See your total including shipping before confirming.")}
+                </p>
+                {shippingError && <button type="button" onClick={retryShipping} className="btn btn-secondary mt-3">{ar ? "إعادة حساب الشحن" : "Retry shipping"}</button>}
+              </div>
               <Field label={t.checkout.address} className="sm:col-span-2">
                 <textarea
                   required
+                  autoComplete="street-address"
                   value={form.address}
                   onChange={(e) => set("address", e.target.value)}
                   rows={2}
@@ -244,6 +278,17 @@ export default function CheckoutPage() {
               <PaymentOption checked={form.payment_method === "card"} onChange={() => set("payment_method", "card")} Icon={CreditCard} title={t.checkout.card} hint={ar ? "خصم 5% — فيزا / ماستركارد عبر Kashier" : "5% off — Visa / Mastercard via Kashier"} badge={ar ? "خصم 5%" : "5% off"} />
             </div>
           </div>
+
+          {bumpProduct && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-white p-4 lg:hidden">
+              <input type="checkbox" checked={bumpAdded} onChange={(event) => setBumpAdded(event.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-brand" />
+              <span className="text-sm">
+                <span className="block font-semibold">{ar ? `أضف ${bumpProduct.name_ar} (اختياري)` : `Add ${bumpProduct.name_en} (optional)`}</span>
+                <span className="mt-1 block font-bold text-brand">{formatPrice(bumpProduct.bumpPrice, lang)}</span>
+                <span className="mt-1 block text-fg-muted">{ar ? "الإجمالي والشحن بيتحدثوا تلقائيًا بعد الإضافة." : "Total and shipping update after adding this item."}</span>
+              </span>
+            </label>
+          )}
 
           {/* Collapsible discount code */}
           <div className="glass p-4">
@@ -294,21 +339,13 @@ export default function CheckoutPage() {
             {bumpTotal > 0 && <Row label={ar ? "عرض إضافي" : "Add-on offer"} value={formatPrice(bumpTotal, lang)} />}
             <Row
               label={t.cart.shipping}
-              value={
-                !hasLocation
-                  ? (ar ? "اختر العنوان" : "Select address")
-                  : shippingLoading
-                    ? "..."
-                    : freeShipping
-                      ? (ar ? "مجاني" : "Free")
-                      : formatPrice(effectiveShipping, lang)
-              }
+              value={shippingText}
               dim={!hasLocation || shippingLoading}
             />
           </dl>
           <div className="mt-5 flex justify-between border-t border-border pt-5">
             <span className="font-semibold text-fg">{t.cart.total}</span>
-            <span className="text-xl font-bold text-brand">{formatPrice(total, lang)}</span>
+            <span className="text-xl font-bold text-brand">{totalText}</span>
           </div>
 
           {/* Order bump — only show if bump product was resolved from DB */}
@@ -337,8 +374,8 @@ export default function CheckoutPage() {
 
           {error && <p className="mt-4 rounded-xl border border-brand/20 bg-brand/5 px-4 py-2.5 text-sm text-brand-soft">{error}</p>}
 
-          <button type="submit" disabled={submitting || !hasLocation || shippingLoading} className="btn btn-primary mt-6 w-full gap-2">
-            {submitting ? <><Loader2 size={16} className="animate-spin" /> {ar ? "جارٍ المعالجة..." : "Processing..."}</> : <><ShieldCheck size={16} /> {t.checkout.placeOrder}</>}
+          <button type="submit" disabled={submitting || !quoteReady} className="btn btn-primary mt-6 w-full gap-2">
+            {submitting ? <><Loader2 size={16} className="animate-spin" /> {ar ? "جارٍ المعالجة..." : "Processing..."}</> : <><ShieldCheck size={16} /> {submitLabel}</>}
           </button>
 
           {/* Security reassurance */}
@@ -351,31 +388,17 @@ export default function CheckoutPage() {
         </aside>
 
         {/* Mobile sticky bottom bar */}
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-ink/95 p-4 backdrop-blur-xl lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white p-4 lg:hidden" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
           <div className="mx-auto flex max-w-6xl flex-col gap-2">
-            {/* Order bump mobile */}
-            {bumpProduct && (
-              <div className={`cursor-pointer p-3 ${bumpAdded ? "bump-card bump-card-active" : "bump-card"}`} onClick={() => setBumpAdded((v) => !v)}>
-                <div className="flex items-center gap-2">
-                  <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${bumpAdded ? "border-gold bg-gold text-white" : "border-border"}`}>
-                    {bumpAdded && <Check size={10} />}
-                  </div>
-                  <Wind size={12} className="text-gold" />
-                  <span className="text-xs font-semibold text-fg">{ar ? `أضف ${bumpProduct.name_ar}` : `Add ${bumpProduct.name_en}`}</span>
-                  <span className="ml-auto text-xs font-bold text-gold">{formatPrice(bumpProduct.bumpPrice, lang)}</span>
-                  <span className="text-[10px] text-fg-dim line-through">{formatPrice(bumpProduct.originalPrice, lang)}</span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3">
+            {error && <p role="alert" className="max-h-20 overflow-auto text-sm text-red-700">{error}</p>}
+            <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <span className="text-xs text-fg-dim">{t.cart.total}</span>
-                <span className="ml-2 text-lg font-bold text-brand">{formatPrice(total, lang)}</span>
+                <p className="flex flex-wrap justify-between gap-2 text-sm"><span>{t.cart.shipping}</span><strong>{shippingText}</strong></p>
+                <p className="mt-1 flex flex-wrap justify-between gap-2 text-sm"><span>{ar ? "الإجمالي شامل الشحن" : "Total including shipping"}</span><strong className="text-brand">{totalText}</strong></p>
               </div>
-              <button type="submit" disabled={submitting || !hasLocation || shippingLoading} className="btn btn-primary gap-2">
+              <button type="submit" disabled={submitting || !quoteReady} className="btn btn-primary min-h-12 w-full gap-2">
                 {submitting ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                {ar ? "أكد الطلب" : "Confirm"}
+                {submitting ? (ar ? "جاري تأكيد الطلب…" : "Confirming…") : submitLabel}
               </button>
             </div>
 
@@ -390,7 +413,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Spacer for mobile sticky bar */}
-        <div className="h-40 lg:hidden" />
+        <div className="h-56 lg:hidden" />
       </form>
     </div>
   );
@@ -403,7 +426,7 @@ function Field({ label, children, className = "" }: { label: string; children: R
 function PaymentOption({ checked, onChange, Icon, title, hint, badge }: { checked: boolean; onChange: () => void; Icon: React.ComponentType<{ size?: number }>; title: string; hint: string; badge?: string }) {
   return (
     <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${checked ? "border-brand bg-brand/5" : "border-border hover:border-border-hover"}`}>
-      <input type="radio" checked={checked} onChange={onChange} className="mt-1 accent-brand" />
+      <input type="radio" name="payment_method" checked={checked} onChange={onChange} className="mt-1 accent-brand" />
       <div className="flex items-start gap-3">
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${checked ? "bg-brand/10 text-brand" : "bg-white/[0.03] text-fg-dim"}`}>
           <Icon size={18} />

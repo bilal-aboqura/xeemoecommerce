@@ -32,6 +32,7 @@ export function WhatsAppFloat() {
   const ar = lang === "ar";
   const hiddenInHero = useSyncExternalStore(subscribeToViewport, isHeroVisible, () => false);
   const productPage = pathname.startsWith("/product/");
+  if (pathname.startsWith("/checkout")) return null;
 
   return (
     <a

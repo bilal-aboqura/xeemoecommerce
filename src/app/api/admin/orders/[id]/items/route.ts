@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getCheckoutSettings } from "@/lib/data/catalog";
-import { getShippingCost, resolveDiscount } from "@/lib/data/orders";
+import { getShippingCostForProducts, resolveDiscount } from "@/lib/data/orders";
 import { calcItemsSubtotal, calcOnlinePaymentDiscount } from "@/lib/pricing";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 
@@ -123,7 +123,7 @@ export async function PUT(
 
   const itemsTotal = calcItemsSubtotal(normalizedItems);
   const [shippingQuote, checkoutSettings, codeDiscount] = await Promise.all([
-    getShippingCost(order.governorate, order.city),
+    getShippingCostForProducts(order.governorate, order.city, normalizedItems.map((item) => item.product_id)),
     getCheckoutSettings(),
     resolveDiscount(order.discount_code, itemsTotal),
   ]);

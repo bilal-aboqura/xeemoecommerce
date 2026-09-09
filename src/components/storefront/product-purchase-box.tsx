@@ -24,6 +24,10 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
   const desc = ar ? product.long_desc_ar : product.long_desc_en;
   const image = product.images?.[0] ?? "/images/placeholder.webp";
   const price = Number(product.price);
+  const compareAtPrice = Number(product.compare_at_price);
+  const hasSale = Number.isFinite(compareAtPrice) && compareAtPrice > price;
+  const savings = hasSale ? compareAtPrice - price : 0;
+  const discountPercent = hasSale ? Math.round((savings / compareAtPrice) * 100) : 0;
   const addButtonContent = out
     ? t.product.outOfStock
     : added
@@ -45,10 +49,10 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
 
   function buyNow() {
     if (out) return;
-    addToCart({ id: product.id, slug: product.slug, name_en: product.name_en, name_ar: product.name_ar, price, image, stock: product.stock }, qty);
+    addToCart({ id: product.id, slug: product.slug, name_en: product.name_en, name_ar: product.name_ar, price, image, stock: product.stock }, qty, { showPrompt: false });
     trackMetaEvent("AddToCart", productMetaParams({ id: product.id, price, quantity: qty }));
     trackStoreEvent("add_to_cart");
-    router.push("/cart");
+    router.push("/checkout");
   }
 
   return (
@@ -64,14 +68,19 @@ export function ProductPurchaseBox({ product }: { product: ProductDetail }) {
           {name}
         </h1>
 
-        <div className="mt-4 flex items-baseline gap-3">
-          <span className="text-3xl font-bold text-brand">
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-4xl font-extrabold leading-none tracking-tight text-brand sm:text-5xl">
             {formatPrice(price, lang)}
           </span>
-          {product.compare_at_price && Number(product.compare_at_price) > price && (
-            <span className="text-lg text-fg-dim line-through">
-              {formatPrice(Number(product.compare_at_price), lang)}
-            </span>
+          {hasSale && (
+            <>
+              <span className="text-lg font-medium text-fg-dim line-through">
+                {formatPrice(compareAtPrice, lang)}
+              </span>
+              <span className="rounded-full bg-brand px-3 py-1 text-sm font-bold text-white">
+                {ar ? `وفر ${formatPrice(savings, lang)} · خصم ${discountPercent}%` : `Save ${formatPrice(savings, lang)} · ${discountPercent}% off`}
+              </span>
+            </>
           )}
         </div>
 

@@ -77,3 +77,23 @@ and persist any existing shipment before clearing `orders.shipment_creation` for
 specific order. Do not clear the claim until the carrier outcome is known.
 
 Run `node scripts/test-mylerz.mjs` for mocked integration checks; it creates no live shipments.
+
+### 450 ml shipping offer and mobile checkout
+
+Shipping is EGP 80 when every catalog product in the basket is 450 ml, including
+any checkout add-on. Adding another size restores the destination's normal rate.
+The existing free-shipping threshold still takes priority. Size is read from
+the catalog's Weight / Size field, falling back to the product name only when
+that field is empty; Arabic digits are supported. Cart text cannot override it.
+
+Excluded governorates: Fayoum, Beni Suef, Minya, Assiut, Sohag, Qena, Luxor, Aswan,
+Red Sea, New Valley, North Sinai, and South Sinai.
+
+The same shipping policy runs for the checkout preview, saved orders and admin
+item edits. Unknown shipping is never displayed as zero: checkout waits for a
+current quote and provides retry controls on failure. Mobile checkout shows
+shipping and the inclusive total above the form and in the fixed confirmation
+bar. The add-to-cart dialog offers checkout or continued shopping.
+
+Run `node scripts/test-shipping.mjs` for mocked shipping-policy checks.
+These changes need an application deployment, with no database migration.
