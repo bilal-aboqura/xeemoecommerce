@@ -11,6 +11,8 @@ function compile(file, dependencies, globals = {}) {
 const statuses = compile('src/lib/mylerz-status.ts', {});
 for (const status of ['Out for delivery', 'Delivery failed', 'Undelivered', 'Returned', 'Not delivered']) assert.notEqual(statuses.mylerzStatusKind(status), 'delivered');
 assert.equal(statuses.mylerzStatusKind('Delivered'), 'delivered');
+assert.equal(statuses.mylerzStatusKind('Confirmed Delivered'), 'delivered');
+assert.equal(statuses.mylerzStatusKind('تم تأكيد تسليم الشحنة'), 'delivered');
 let calls = [];
 let payload;
 const api = compile('src/lib/mylerz.ts', { 'server-only': {}, '@/lib/mylerz-status': statuses }, {

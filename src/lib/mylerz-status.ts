@@ -1,15 +1,15 @@
 export function mylerzStatusKind(status: string) {
   const value = status.trim().toLowerCase();
   if (/cancel|ملغي|إلغاء/.test(value)) return "cancelled";
-  if (/return|fail|undeliver|not deliver|تعذر|مرتجع|لم يتم/.test(value))
-    return "exception";
-  if (/out for|transit|picked|قيد التوصيل/.test(value)) return "shipped";
   if (
-    /^(delivered|delivered to consignee|successfully delivered|تم التسليم|تم التوصيل)$/.test(
+    /^(?:confirmed\s+)?delivered(?:\s+to\s+consignee)?$|^(?:delivery\s+)?confirmed$|^(?:تم\s+)?(?:تأكيد\s+)?(?:تسليم|توصيل)(?:\s+الشحنة)?$/.test(
       value,
     )
   )
     return "delivered";
+  if (/return|fail|undeliver|not deliver|تعذر|مرتجع|لم يتم/.test(value))
+    return "exception";
+  if (/out for|transit|picked|قيد التوصيل/.test(value)) return "shipped";
   return "processing";
 }
 
