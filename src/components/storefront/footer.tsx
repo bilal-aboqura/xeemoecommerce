@@ -123,7 +123,13 @@ export function Footer() {
           </p>
           <p className="mt-2 sm:mt-0">
             {t.footer.developedBy}{" "}
-            <span className="text-white/75">Bilal Aboqura</span>
+            <a
+              href="tel:+201112678333"
+              className="text-white/75 transition hover:text-white"
+              dir="ltr"
+            >
+              Bilal Aboqura · +20 11 12678333
+            </a>
           </p>
         </div>
       </div>
