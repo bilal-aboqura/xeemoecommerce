@@ -124,7 +124,7 @@ export function Footer() {
           <p className="mt-2 sm:mt-0">
             {t.footer.developedBy}{" "}
             <a
-              href="tel:+201112678333"
+              href="https://wa.me/201112678333"
               className="text-white/75 transition hover:text-white"
               dir="ltr"
             >
