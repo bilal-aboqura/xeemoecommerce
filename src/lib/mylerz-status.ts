@@ -7,7 +7,11 @@ export function mylerzStatusKind(status: string) {
     )
   )
     return "delivered";
-  if (/return|fail|undeliver|not deliver|refus|تعذر|مرتجع|لم يتم|رفض/.test(value))
+  if (
+    /return|fail|undeliver|not deliver|refus|origin\s+hub|to\s+origin|تعذر|مرتجع|لم يتم|رفض/.test(
+      value,
+    )
+  )
     return "returned";
   if (/out for|transit|picked|قيد التوصيل/.test(value)) return "shipped";
   return "processing";
